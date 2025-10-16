@@ -8,7 +8,6 @@ import domain.Signal;
 @RestController
 @RequestMapping("/api/signals")
 @CrossOrigin(origins = "*")
-
 public class SignalController {
     private final SignalService signalService;
 
@@ -17,16 +16,16 @@ public class SignalController {
     }
 
     /*
-    @PostMapping("/{patientId}")
-    public Signal uploadSignal(@PathVariable Long patientId, @RequestBody Signal signal) {
-        return signalService.saveSignal(patientId, signal);
+    @PostMapping
+    public ResponseEntity<String> uploadSignal(@RequestBody Signal signal) {
+        signalService.saveSignal(signal);
+        return ResponseEntity.ok("Signal saved");
     }
 
-    @GetMapping("/{patientId}")
-    public List<Signal> getSignals(@PathVariable Long patientId) {
-        return signalService.getSignalsByPatient(patientId);
+    @GetMapping("/patient/{id}")
+    public ResponseEntity<List<Signal>> getPatientSignals(@PathVariable Long id) {
+        return ResponseEntity.ok(signalService.getSignalsByPatient(id));
     }
-
      */
 
 }
