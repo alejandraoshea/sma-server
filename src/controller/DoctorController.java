@@ -17,5 +17,20 @@ public class DoctorController {
         this.doctorService = doctorService;
     }
 
+    /*
+    @PostMapping("/{doctorId}/upload-prescription")
+    public String uploadPrescription(
+            @PathVariable Long doctorId,
+            @RequestParam("patientId") Long patientId,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        doctorService.savePrescription(doctorId, patientId, file);
+        return "Prescription uploaded successfully";
+    }
 
+    @GetMapping("/{doctorId}/reports/{patientId}")
+    public Object viewPatientReport(@PathVariable Long doctorId, @PathVariable Long patientId) {
+        return doctorService.getPatientReport(doctorId, patientId);
+    }
+
+     */
 }
