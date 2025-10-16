@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.*;
 
 //will be handling authentication: login, register and logout + interacts with AuthService and AuthRepo
 @RestController
-@RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/authentication")
+@CrossOrigin(origins = "*") //for frontend
 public class AuthController {
     private final AuthService authService;
     public AuthController(AuthService authService) {
@@ -16,22 +16,17 @@ public class AuthController {
     }
 
     /*@PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
-        authService.registerUser(request);
+    public ResponseEntity<String> register(@RequestBody User user) {
+        authService.register(user);
         return ResponseEntity.ok("User registered successfully");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
-        String token = authService.authenticate(request.getUsername(), request.getPassword());
-        return ResponseEntity.ok(token);
+    public ResponseEntity<?> login(@RequestParam String email, @RequestParam String password) {
+        Optional<User> user = authService.login(email, password);
+        return user.map(ResponseEntity::ok)
+                   .orElseGet(() -> ResponseEntity.status(401).body("Invalid credentials"));
     }
-
-    @GetMapping("/me")
-    public User getUserProfile(@RequestParam String username) {
-        return authService.getUserByUsername(username);
-    }
-
      */
 
 }
