@@ -1,2 +1,4 @@
-package service;public class SymptomService {
+package service;
+
+public class SymptomService {
 }

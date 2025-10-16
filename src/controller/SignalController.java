@@ -16,6 +16,17 @@ public class SignalController {
         this.signalService = signalService;
     }
 
+    /*
+    @PostMapping("/{patientId}")
+    public Signal uploadSignal(@PathVariable Long patientId, @RequestBody Signal signal) {
+        return signalService.saveSignal(patientId, signal);
+    }
 
+    @GetMapping("/{patientId}")
+    public List<Signal> getSignals(@PathVariable Long patientId) {
+        return signalService.getSignalsByPatient(patientId);
+    }
+
+     */
 
 }

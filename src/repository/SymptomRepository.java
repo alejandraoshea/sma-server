@@ -1,2 +1,4 @@
-package repository;public class SymptomRepository {
+package repository;
+
+public class SymptomRepository {
 }
