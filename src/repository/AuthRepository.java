@@ -1,4 +1,5 @@
 package repository;
 
-public class UserRepository {
+//! database access for users
+public class AuthRepository {
 }
