@@ -1,10 +1,9 @@
 package controller;
 
-import domain.Patient;
+import domain.Symptoms;
 import service.PatientService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -17,33 +16,17 @@ public class PatientController {
         this.patientService = patientService;
     }
 
-    /*
+    //** patient can submit or update their symptoms
     @PostMapping("/{patientId}/symptoms")
-    public ArrayList<String> submitSymptom(@PathVariable Long patientId, @RequestBody ArrayList<String> symptom) {
-        return patientService.saveSymptom(patientId, symptom);
+    public List<Symptoms> updateSymptoms(@PathVariable Long patientId, @RequestBody List<Symptoms> symptoms){
+        return patientService.updateSymptoms(patientId, symptoms);
     }
 
+    //** see all symptoms
     @GetMapping("/{patientId}/symptoms")
-    public List<String> getSymptoms(@PathVariable Long patientId) {
+    public List<Symptoms> getSymptoms(@PathVariable Long patientId) {
         return patientService.getSymptoms(patientId);
     }
-
-    //** recordSymptom: POST
-    //** getPatientSymptoms : GET
-
-
-        @PostMapping
-    public ResponseEntity<String> recordSymptom(@RequestBody Symptom symptom) {
-        symptomService.recordSymptom(symptom);
-        return ResponseEntity.ok("Symptom recorded successfully");
-    }
-
-    @GetMapping("/patient/{id}")
-    public ResponseEntity<List<Symptom>> getPatientSymptoms(@PathVariable Long id) {
-        return ResponseEntity.ok(symptomService.getSymptomsForPatient(id));
-    }
-     */
-
 
     //!! will be handling the symptoms for a cleaner REST API design
 }

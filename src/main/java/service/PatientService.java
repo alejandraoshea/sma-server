@@ -1,7 +1,10 @@
 package service;
 
+import domain.Symptoms;
 import org.springframework.stereotype.Service;
 import repository.PatientRepository;
+
+import java.util.List;
 
 @Service
 public class PatientService {
@@ -11,14 +14,17 @@ public class PatientService {
         this.patientRepository = patientRepository;
     }
 
-
-    //** recordSymptom or saveSymptom, getSymptomsForPatient,..?
-    /*public void recordSymptom(Symptom symptom) {
-        symptomRepository.save(symptom);
+    public List<Symptoms> updateSymptoms(Long patientId, List<Symptoms> symptoms) {
+        //** assign patientId to each symptom
+        for(Symptoms symptom : symptoms){
+            symptom.setPatientId(patientId);
+        }
+        patientRepository.saveSymptoms(symptoms);
+        return patientRepository.findByPatientId(symptoms);
     }
 
-    public List<Symptom> getSymptomsForPatient(Long patientId) {
-        return symptomRepository.findByPatientId(patientId);
+    public List<Symptoms> getSymptoms(Long patientId) {
+        return patientRepository.findByPatientId(patientId);
     }
-     */
+
 }

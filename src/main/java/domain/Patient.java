@@ -14,11 +14,11 @@ public class Patient {
     private String lastName;
     private Gender gender;
     private LocalDate birthDate;
-    private Set<Symptom> symptoms;
+    private Set<Symptoms> symptoms;
     private Long height; // in cm
     private double weight; // kg
 
-    public Patient(Long patientID, Long userId, String name, String lastName, Gender gender, LocalDate birthDate, Set<Symptom> symptoms, Long height, double weight) {
+    public Patient(Long patientID, Long userId, String name, String lastName, Gender gender, LocalDate birthDate, Set<Symptoms> symptoms, Long height, double weight) {
         this.patientID = patientID;
         this.userId = userId;
         this.name = name;
