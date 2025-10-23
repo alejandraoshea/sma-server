@@ -10,6 +10,14 @@ public class Symptom {
     private String value; //? example: 38.5ºC for fever or moderate for weakness??
     private LocalDateTime timestamp;
 
+    public Symptom(Long id, Long patientId, SymptomType type, String value, LocalDateTime timestamp) {
+        this.id = id;
+        this.patientId = patientId;
+        this.type = type;
+        this.value = value;
+        this.timestamp = timestamp;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
