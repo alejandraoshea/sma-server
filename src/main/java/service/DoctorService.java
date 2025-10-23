@@ -1,7 +1,6 @@
 package service;
 
 import org.springframework.stereotype.Service;
-import repository.AuthRepository;
 import repository.DoctorRepository;
 
 @Service

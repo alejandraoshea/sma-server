@@ -1,40 +1,28 @@
 package service;
 
-
-//! user creation, login validation (+ password hashing?)
-
+import domain.Role;
 import domain.User;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import repository.AuthRepository;
-
-import java.util.Optional;
+import repository.UserRepository;
 
 @Service
 public class AuthService {
-    private final AuthRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final UserRepository userRepository;
 
-    //? we could do smth like this:
-    //private final EncryptPassword passwordEncoder = new EncryptPassword(); /
-
-    public AuthService(AuthRepository userRepository) {
+    public AuthService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    //** register, login
-
-    /*
     public void register(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
 
-    public Optional<User> login(String username, String password) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        if (userOpt.isPresent() && passwordEncoder.matches(password, userOpt.get().getPassword())) {
-            return userOpt;
-        }
-        return Optional.empty();
-    }
-
-     */
+    /*public boolean login(String email, String password) {
+        return userRepository.findByEmail(email)
+                .map(u -> passwordEncoder.matches(password, u.getPassword()))
+                .orElse(false);
+    }*/
 }

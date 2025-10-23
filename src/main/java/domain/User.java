@@ -11,6 +11,12 @@ public class User {
     private String password;
     private Role role;
 
+    public User(String email, String hashed, Role role) {
+        this.email = email;
+        this.password = hashed;
+        this.role = role;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
