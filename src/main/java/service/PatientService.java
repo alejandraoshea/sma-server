@@ -10,4 +10,15 @@ public class PatientService {
     public PatientService(PatientRepository patientRepository) {
         this.patientRepository = patientRepository;
     }
+
+
+    //** recordSymptom or saveSymptom, getSymptomsForPatient,..?
+    /*public void recordSymptom(Symptom symptom) {
+        symptomRepository.save(symptom);
+    }
+
+    public List<Symptom> getSymptomsForPatient(Long patientId) {
+        return symptomRepository.findByPatientId(patientId);
+    }
+     */
 }

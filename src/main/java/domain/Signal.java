@@ -13,6 +13,15 @@ public class Signal {
     private SignalType signalType;
     private String patientData;
 
+    public Signal(Long id, Long patientId, Long measurementSessionId, LocalDateTime timestamp, SignalType signalType, String patientData) {
+        this.id = id;
+        this.patientId = patientId;
+        this.measurementSessionId = measurementSessionId;
+        this.timestamp = timestamp;
+        this.signalType = signalType;
+        this.patientData = patientData;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
