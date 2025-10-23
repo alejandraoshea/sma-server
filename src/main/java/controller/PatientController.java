@@ -11,7 +11,6 @@ import java.util.List;
 @RequestMapping("/api/patients")
 @CrossOrigin(origins = "*")
 public class PatientController {
-
     private final PatientService patientService;
 
     public PatientController(PatientService patientService) {
@@ -29,7 +28,22 @@ public class PatientController {
         return patientService.getSymptoms(patientId);
     }
 
+    //** recordSymptom: POST
+    //** getPatientSymptoms : GET
+
+
+        @PostMapping
+    public ResponseEntity<String> recordSymptom(@RequestBody Symptom symptom) {
+        symptomService.recordSymptom(symptom);
+        return ResponseEntity.ok("Symptom recorded successfully");
+    }
+
+    @GetMapping("/patient/{id}")
+    public ResponseEntity<List<Symptom>> getPatientSymptoms(@PathVariable Long id) {
+        return ResponseEntity.ok(symptomService.getSymptomsForPatient(id));
+    }
      */
+
 
     //!! will be handling the symptoms for a cleaner REST API design
 }
