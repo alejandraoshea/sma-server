@@ -23,7 +23,7 @@ public class PatientRepository {
         String insertSql = "INSERT INTO symptoms (patient_id, symptom, timestamp) VALUES (?, ?, ?)";
 
         for (Symptoms symptom : symptomsList) {
-            Long patientId = symptom.getPatientId();
+            Long patientId = symptom.getMeasurementSessionId();
 
             LocalDateTime timestamp;
             if (symptom.getTimestamp() != null) {

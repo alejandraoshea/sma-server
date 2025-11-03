@@ -17,7 +17,7 @@ public class PatientService {
     public List<Symptoms> updateSymptoms(Long patientId, List<Symptoms> symptoms) {
         //** assign patientId to each symptom
         for(Symptoms symptom : symptoms){
-            symptom.setPatientId(patientId);
+            symptom.setMeasurementSessionId(patientId);
         }
         patientRepository.saveSymptoms(symptoms);
         return patientRepository.findByPatientId(patientId);

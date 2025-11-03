@@ -7,19 +7,17 @@ import java.util.Objects;
 @Data
 public class Signal {
     private Long id;
-    private Long patientId; //** patient
     private Long measurementSessionId; //** FK measurementSession
     private LocalDateTime timestamp;
     private SignalType signalType;
-    private String patientData;
+    private String patientSignalData;
 
-    public Signal(Long id, Long patientId, Long measurementSessionId, LocalDateTime timestamp, SignalType signalType, String patientData) {
+    public Signal(Long id, Long measurementSessionId, LocalDateTime timestamp, SignalType signalType, String patientSignalData) {
         this.id = id;
-        this.patientId = patientId;
         this.measurementSessionId = measurementSessionId;
         this.timestamp = timestamp;
         this.signalType = signalType;
-        this.patientData = patientData;
+        this.patientSignalData = patientSignalData;
     }
 
     @Override
@@ -27,23 +25,22 @@ public class Signal {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Signal signal = (Signal) o;
-        return Objects.equals(id, signal.id) && Objects.equals(patientId, signal.patientId) && Objects.equals(measurementSessionId, signal.measurementSessionId) && Objects.equals(timestamp, signal.timestamp) && signalType == signal.signalType && Objects.equals(patientData, signal.patientData);
+        return Objects.equals(id, signal.id) && Objects.equals(measurementSessionId, signal.measurementSessionId) && Objects.equals(timestamp, signal.timestamp) && signalType == signal.signalType && Objects.equals(patientSignalData, signal.patientSignalData);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, patientId, measurementSessionId, timestamp, signalType, patientData);
+        return Objects.hash(id, measurementSessionId, timestamp, signalType, patientSignalData);
     }
 
     @Override
     public String toString() {
         return "Signal{" +
                 "id=" + id +
-                ", patientId=" + patientId +
                 ", measurementSessionId=" + measurementSessionId +
                 ", timestamp=" + timestamp +
                 ", signalType=" + signalType +
-                ", patientData='" + patientData + '\'' +
+                ", patientSignalData='" + patientSignalData + '\'' +
                 '}';
     }
 }
