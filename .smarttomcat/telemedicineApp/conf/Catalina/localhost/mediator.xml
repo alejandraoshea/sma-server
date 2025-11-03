@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Context docBase="C:\Users\34611\Documents\apache-tomee-plume-10.0.0\webapps">
   <Resources cacheMaxSize="10240">
-    <PreResources base="C:/Users/34611/Desktop/INGENIERIA_BIOMEDICA/TERCERO_CARRERA/SEGUNDO_CUATRI/PROYECTOSI/cmm-springboot/target/classes" className="org.apache.catalina.webresources.DirResourceSet" webAppMount="/WEB-INF/classes"/>
+    <PreResources base="C:/Users/34611/Desktop/INGENIERIA_BIOMEDICA/CUARTO_CARRERA/TELEMEDICINE/sma-server/target/classes" className="org.apache.catalina.webresources.DirResourceSet" webAppMount="/WEB-INF/classes"/>
     <PostResources base="C:/Users/34611/.m2/repository/org/springframework/boot/spring-boot-starter-web/3.4.2/spring-boot-starter-web-3.4.2.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/spring-boot-starter-web-3.4.2.jar"/>
     <PostResources base="C:/Users/34611/.m2/repository/org/springframework/boot/spring-boot-starter/3.2.6/spring-boot-starter-3.2.6.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/spring-boot-starter-3.2.6.jar"/>
     <PostResources base="C:/Users/34611/.m2/repository/org/springframework/boot/spring-boot/3.2.6/spring-boot-3.2.6.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/spring-boot-3.2.6.jar"/>
