@@ -50,11 +50,11 @@
   <role rolename="tomcat"/>
   <role rolename="role1"/>
   <user username="tomcat" password="tomcat" roles="tomcat"/>
-  <user username="both" password="admin" roles="tomcat,role1"/>
+  <user username="both" password="all" roles="tomcat,role1"/>
   <user username="role1" password="role1" roles="role1"/>
 
   <!-- Activate those lines to get access to TomEE GUI if added (tomee-webaccess) -->
   <role rolename="tomee-admin" />
-  <user username="tomee" password="tomee" roles="tomee-admin,manager-gui" />
+  <user username="admin" password="admin*" roles="tomee-admin,manager-gui,manager-script,manager-jmx,manager-status" />
 </tomcat-users>
 
