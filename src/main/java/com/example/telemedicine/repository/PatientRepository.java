@@ -20,10 +20,10 @@ public class PatientRepository {
     public void saveSymptoms(List<Symptoms> symptomsList) {
         if (symptomsList == null || symptomsList.isEmpty()) return;
 
-        String insertSql = "INSERT INTO symptoms (patient_id, symptom, timestamp) VALUES (?, ?, ?)";
+        String insertSql = "INSERT INTO symptoms (session_id, symptom_set, timestamp) VALUES (?, ?, ?)";
 
         for (Symptoms symptom : symptomsList) {
-            Long patientId = symptom.getMeasurementSessionId();
+            Long sessionId = symptom.getMeasurementSessionId();
 
             LocalDateTime timestamp;
             if (symptom.getTimestamp() != null) {
@@ -32,32 +32,54 @@ public class PatientRepository {
                 timestamp = LocalDateTime.now();
             }
 
-            for (SymptomType type : symptom.getSymptomsSet()) {
-                jdbcTemplate.update(insertSql, patientId, type.name(), Timestamp.valueOf(timestamp));
-            }
+            String[] symptomArray = symptom.getSymptomsSet().stream()
+                    .map(Enum::name)
+                    .toArray(String[]::new);
+
+            jdbcTemplate.update(insertSql, sessionId, symptomArray, Timestamp.valueOf(timestamp));
+
         }
     }
 
     public List<Symptoms> findByPatientId(Long patientId) {
-        String sql = "SELECT symptom_id, patient_id, symptom_type, timestamp FROM symptoms WHERE patient_id = ?";
+        String sql = """
+            SELECT sy.symptom_id, sy.session_id, sy.symptom_set, sy.time_stamp
+            FROM symptoms sy
+            JOIN measurement_sessions ms ON ms.session_id = sy.session_id
+            WHERE ms.patient_id = ?
+            ORDER BY sy.time_stamp DESC
+        """;
         //** if we want to order it we can add:  "ORDER BY timestamp DESC;"
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, patientId);
-        Map<LocalDateTime, Set<SymptomType>> groupedByTimestamp = new LinkedHashMap<>();
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Long symptomId = rs.getLong("symptom_id");
+            Long sessionId = rs.getLong("session_id");
+            LocalDateTime ts = rs.getTimestamp("time_stamp").toLocalDateTime();
 
-        for (Map<String, Object> row : rows) {
-            LocalDateTime ts = ((java.sql.Timestamp) row.get("timestamp")).toLocalDateTime();
-            groupedByTimestamp.computeIfAbsent(ts, k -> new HashSet<>())
-                    .add(SymptomType.valueOf((String) row.get("symptom_type")));
-        }
+            // convert PostgreSQL enum[] array → Set<SymptomType>
+            String[] symptomArray = (String[]) rs.getArray("symptom_set").getArray();
+            Set<SymptomType> symptomSet = new HashSet<>();
+            for (String s : symptomArray) {
+                symptomSet.add(SymptomType.valueOf(s));
+            }
 
-        List<Symptoms> results = new ArrayList<>();
-        for (var entry : groupedByTimestamp.entrySet()) {
-            results.add(new Symptoms(null, patientId, entry.getValue(), entry.getKey()));
-        }
-
-        return results;
+            return new Symptoms(symptomId, sessionId, symptomSet, ts);
+        }, patientId);
     }
 
+    public List<Symptoms> findBySessionId(Long sessionId) {
+        String sql = "SELECT symptom_id, session_id, symptom_set, time_stamp FROM symptoms WHERE session_id = ?";
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Long id = rs.getLong("symptom_id");
+            LocalDateTime ts = rs.getTimestamp("time_stamp").toLocalDateTime();
+            String[] symptomArray = (String[]) rs.getArray("symptom_set").getArray();
+            Set<SymptomType> set = new HashSet<>();
+            for (String s : symptomArray) {
+                set.add(SymptomType.valueOf(s));
+            }
+            return new Symptoms(id, sessionId, set, ts);
+        }, sessionId);
+    }
 
 }
