@@ -1,0 +1,22 @@
+# This is a template for the application-local.yml file which holds necessary configuration for the database connection
+# Once you have filled in the details, copy or rename this file in the same directory as "application-local.yml".
+
+spring:
+  datasource:
+    url: jdbc:postgresql://aws-1-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require
+    username: postgres.dbbipsvrmqzjxztvqitz
+    password: <PASSWORD>
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8080
+
