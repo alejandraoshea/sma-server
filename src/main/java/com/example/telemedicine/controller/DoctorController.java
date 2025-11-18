@@ -24,8 +24,8 @@ public class DoctorController {
     }
 
     @GetMapping("/{doctorId}/patients")
-    public List<Patient> getDoctorPatients(@PathVariable Long doctorId) {
-        return doctorService.getDoctorPatients(doctorId);
+    public List<Patient> getPatientsOfDoctor(@PathVariable Long doctorId) {
+        return doctorService.getPatientsOfDoctor(doctorId);
     }
 
     @GetMapping("/patients/{patientId}/sessions")
@@ -33,19 +33,7 @@ public class DoctorController {
         return sessionService.getSessionsByPatient(patientId);
     }
 
-    /*
-    @PostMapping("/{doctorId}/upload-prescription")
-    public String uploadPrescription(
-            @PathVariable Long doctorId,
-            @RequestParam("patientId") Long patientId,
-            @RequestParam("file") MultipartFile file) throws IOException {
-        doctorService.savePrescription(doctorId, patientId, file);
-        return "Prescription uploaded successfully";
-    }
+    //?? REPORT: generate or view
+    //?? PRESCRIPTION: generate or view
 
-    @GetMapping("/{doctorId}/reports/{patientId}")
-    public Object viewPatientReport(@PathVariable Long doctorId, @PathVariable Long patientId) {
-        return doctorService.getPatientReport(doctorId, patientId);
-    }
-     */
 }

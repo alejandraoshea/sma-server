@@ -46,17 +46,4 @@ public class MeasurementSessionController {
         return measurementSessionService.getSessionsByPatient(patientId);
     }
 
-    /*
-    @PostMapping
-    public ResponseEntity<String> uploadSignal(@RequestBody Signal signal) {
-        signalService.saveSignal(signal);
-        return ResponseEntity.ok("Signal saved");
-    }
-
-    @GetMapping("/patient/{id}")
-    public ResponseEntity<List<Signal>> getPatientSignals(@PathVariable Long id) {
-        return ResponseEntity.ok(signalService.getSignalsByPatient(id));
-    }
-     */
-
 }

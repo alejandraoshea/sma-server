@@ -44,28 +44,4 @@ public class DoctorRepository {
         }, doctorId);
     }
 
-
-    /**
-     * This method gets the measurement history (sessions) for a selected patient
-     * @param patientId the patient id corresponding to the patient from who we want to see the historial as integer
-     * @return the measurement session of the patient as list
-     */
-    public List<MeasurementSession> findPatientSessions(Long patientId) {
-        String sql = """
-            SELECT session_id, patient_id, time_stamp
-            FROM measurement_sessions
-            WHERE patient_id = ?
-            ORDER BY time_stamp DESC
-        """;
-
-        return jdbcTemplate.query(sql, (rs, rowNum) ->
-                new MeasurementSession(
-                        rs.getLong("session_id"),
-                        rs.getLong("patient_id"),
-                        rs.getTimestamp("time_stamp").toLocalDateTime(),
-                        null,
-                        null
-                ), patientId);
-    }
-
 }

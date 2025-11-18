@@ -41,32 +41,6 @@ public class PatientRepository {
         }
     }
 
-    public List<Symptoms> findByPatientId(Long patientId) {
-        String sql = """
-            SELECT sy.symptom_id, sy.session_id, sy.symptom_set, sy.time_stamp
-            FROM symptoms sy
-            JOIN measurement_sessions ms ON ms.session_id = sy.session_id
-            WHERE ms.patient_id = ?
-            ORDER BY sy.time_stamp DESC
-        """;
-        //** if we want to order it we can add:  "ORDER BY timestamp DESC;"
-
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            Long symptomId = rs.getLong("symptom_id");
-            Long sessionId = rs.getLong("session_id");
-            LocalDateTime ts = rs.getTimestamp("time_stamp").toLocalDateTime();
-
-            // convert PostgreSQL enum[] array → Set<SymptomType>
-            String[] symptomArray = (String[]) rs.getArray("symptom_set").getArray();
-            Set<SymptomType> symptomSet = new HashSet<>();
-            for (String s : symptomArray) {
-                symptomSet.add(SymptomType.valueOf(s));
-            }
-
-            return new Symptoms(symptomId, sessionId, symptomSet, ts);
-        }, patientId);
-    }
-
     public List<Symptoms> findBySessionId(Long sessionId) {
         String sql = "SELECT symptom_id, session_id, symptom_set, time_stamp FROM symptoms WHERE session_id = ?";
 

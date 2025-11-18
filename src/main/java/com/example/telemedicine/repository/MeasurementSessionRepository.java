@@ -2,6 +2,7 @@ package com.example.telemedicine.repository;
 
 import com.example.telemedicine.domain.MeasurementSession;
 import com.example.telemedicine.domain.Signal;
+import com.example.telemedicine.domain.SymptomType;
 import com.example.telemedicine.domain.Symptoms;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -12,7 +13,9 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public class MeasurementSessionRepository {
@@ -45,7 +48,7 @@ public class MeasurementSessionRepository {
     public Signal saveSignal(Long sessionId, Signal signal) {
         String sql = """
             INSERT INTO signals (session_id, time_stamp, signal_type, patient_data)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?)
             """;
 
         LocalDateTime timestamp;
@@ -80,29 +83,11 @@ public class MeasurementSessionRepository {
                 .map(Enum::name)
                 .toArray(String[]::new);
 
-        jdbcTemplate.update(insertSql, sessionId, Timestamp.valueOf(timestamp), symptomArray); //** check for patientdata future
+        jdbcTemplate.update(insertSql, sessionId, Timestamp.valueOf(timestamp), null, symptomArray); //** check for patientdata future
 
         symptoms.setTimestamp(timestamp);
         return symptoms;
     }
-
-
-    public List<MeasurementSession> findByPatientId(Long patientId) {
-        String sql = """
-            SELECT session_id, patient_id, time_stamp
-            FROM measurement_sessions
-            WHERE patient_id = ?
-            ORDER BY time_stamp DESC
-            """;
-
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            Long sessionId = rs.getLong("session_id");
-            Long pId = rs.getLong("patient_id");
-            LocalDateTime ts = rs.getTimestamp("time_stamp").toLocalDateTime();
-            return new MeasurementSession(sessionId, pId, ts, null, null);
-        }, patientId);
-    }
-
 
     public List<Signal> findSignalsBySessionId(Long sessionId) {
         String sql = """
@@ -121,23 +106,35 @@ public class MeasurementSessionRepository {
         ), sessionId);
     }
 
-    public MeasurementSession findSessionById(Long sessionId) {
+    public List<Symptoms> findSymptomsBySessionId(Long sessionId) {
         String sql = """
-            SELECT session_id, patient_id, time_stamp
-            FROM measurement_sessions
+            SELECT sy.symptom_id, sy.session_id, sy.symptom_set, sy.time_stamp
+            FROM symptoms sy
             WHERE session_id = ?
-            """;
+            ORDER BY time_stamp DESC
+        """;
+        //** if we want to order it we can add:  "ORDER BY timestamp DESC;"
 
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
-                new MeasurementSession(
-                        rs.getLong("session_id"),
-                        rs.getLong("patient_id"),
-                        rs.getTimestamp("time_stamp").toLocalDateTime(),
-                        null,
-                        null
-                ), sessionId);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Long symptomId = rs.getLong("symptom_id");
+            LocalDateTime ts = rs.getTimestamp("time_stamp").toLocalDateTime();
+
+            // convert PostgreSQL enum[] array → Set<SymptomType>
+            String[] symptomArray = (String[]) rs.getArray("symptom_set").getArray();
+            Set<SymptomType> symptomSet = new HashSet<>();
+            for (String s : symptomArray) {
+                symptomSet.add(SymptomType.valueOf(s));
+            }
+
+            return new Symptoms(symptomId, sessionId, symptomSet, ts);
+        }, sessionId);
     }
 
+    /**
+     * This method gets the measurement history (sessions) for a selected patient
+     * @param patientId the patient id corresponding to the patient from who we want to see the historial as integer
+     * @return the measurement session of the patient as list
+     */
     public List<MeasurementSession> findSessionsByPatientId(Long patientId) {
         String sql = """
             SELECT session_id, patient_id, time_stamp
@@ -153,7 +150,5 @@ public class MeasurementSessionRepository {
             return new MeasurementSession(sessionId, pid, timestamp, null, null);
         }, patientId);
     }
-
-
 
 }

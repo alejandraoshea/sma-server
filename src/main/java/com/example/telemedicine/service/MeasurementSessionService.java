@@ -13,11 +13,9 @@ import java.util.List;
 @Service
 public class MeasurementSessionService {
     private final MeasurementSessionRepository measurementSessionRepository;
-    private final PatientRepository patientRepository;
 
-    public MeasurementSessionService(MeasurementSessionRepository measurementSessionRepository, PatientRepository patientRepository) {
+    public MeasurementSessionService(MeasurementSessionRepository measurementSessionRepository) {
         this.measurementSessionRepository = measurementSessionRepository;
-        this.patientRepository = patientRepository;
     }
 
     public MeasurementSession startNewSession(Long patientId) {
@@ -37,22 +35,12 @@ public class MeasurementSessionService {
     }
 
     public List<Symptoms> getSymptomsBySession(Long sessionId) {
-        return patientRepository.findBySessionId(sessionId);
+        return measurementSessionRepository.findSymptomsBySessionId(sessionId);
     }
 
     public List<MeasurementSession> getSessionsByPatient(Long patientId) {
         return measurementSessionRepository.findSessionsByPatientId(patientId);
     }
 
-    //** we could do:
-    /*
-    public void saveSignal(Signal signal) {
-        signalRepository.save(signal);
-    }
-
-    public List<Signal> getSignalsByPatient(Long patientId) {
-        return signalRepository.findByPatientId(patientId);
-    }
-     */
 
 }
