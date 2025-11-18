@@ -17,30 +17,6 @@ public class PatientRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public void saveSymptoms(List<Symptoms> symptomsList) {
-        if (symptomsList == null || symptomsList.isEmpty()) return;
-
-        String insertSql = "INSERT INTO symptoms (session_id, symptom_set, timestamp) VALUES (?, ?, ?)";
-
-        for (Symptoms symptom : symptomsList) {
-            Long sessionId = symptom.getMeasurementSessionId();
-
-            LocalDateTime timestamp;
-            if (symptom.getTimestamp() != null) {
-                timestamp = symptom.getTimestamp();
-            } else {
-                timestamp = LocalDateTime.now();
-            }
-
-            String[] symptomArray = symptom.getSymptomsSet().stream()
-                    .map(Enum::name)
-                    .toArray(String[]::new);
-
-            jdbcTemplate.update(insertSql, sessionId, symptomArray, Timestamp.valueOf(timestamp));
-
-        }
-    }
-
     public List<Symptoms> findBySessionId(Long sessionId) {
         String sql = "SELECT symptom_id, session_id, symptom_set, time_stamp FROM symptoms WHERE session_id = ?";
 
