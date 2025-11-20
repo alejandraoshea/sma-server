@@ -7,7 +7,6 @@ import com.example.telemedicine.domain.Signal;
 
 @RestController
 @RequestMapping("/api/signals")
-@CrossOrigin(origins = "*")
 public class SignalController {
     private final SignalService signalService;
 

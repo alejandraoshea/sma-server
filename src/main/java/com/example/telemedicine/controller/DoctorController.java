@@ -8,7 +8,6 @@ import com.example.telemedicine.service.DoctorService;
 
 @RestController
 @RequestMapping("/api/doctors")
-@CrossOrigin(origins = "*")
 public class DoctorController {
 
     private final DoctorService doctorService;
