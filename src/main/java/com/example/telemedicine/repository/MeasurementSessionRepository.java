@@ -42,7 +42,7 @@ public class MeasurementSessionRepository {
             return ps;
         }, keyHolder);
 
-        // Instead of getKey(), use getKeys() to fetch all generated keys
+        //** getKeys() to fetch all generated keys (instead of just getKey())
         var keys = keyHolder.getKeys();
 
         Long sessionId = null;
