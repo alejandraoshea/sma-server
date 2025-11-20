@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,11 +28,11 @@ public class MeasurementSessionRepository {
 
     public MeasurementSession startNewSession(Long patientId) {
         String sql = """
-            INSERT INTO measurement_sessions (patient_id, time_stamp)
-            VALUES (?, ?)
-            """;
+        INSERT INTO measurement_sessions (patient_id, time_stamp)
+        VALUES (?, ?)
+        """;
 
-        KeyHolder keyHolder = new GeneratedKeyHolder(); //to capture the session_id
+        KeyHolder keyHolder = new GeneratedKeyHolder();
         LocalDateTime now = LocalDateTime.now();
 
         jdbcTemplate.update(connection -> {
@@ -41,9 +42,26 @@ public class MeasurementSessionRepository {
             return ps;
         }, keyHolder);
 
-        Long sessionId = keyHolder.getKey().longValue();
+        // Instead of getKey(), use getKeys() to fetch all generated keys
+        var keys = keyHolder.getKeys();
+
+        Long sessionId = null;
+        if (keys != null && keys.containsKey("session_id")) {
+            Object keyObj = keys.get("session_id");
+            if (keyObj instanceof Number) {
+                sessionId = ((Number) keyObj).longValue();
+            } else if (keyObj instanceof String) {
+                sessionId = Long.parseLong((String) keyObj);
+            }
+        }
+
+        if (sessionId == null) {
+            throw new IllegalStateException("Failed to retrieve session_id from database.");
+        }
+
         return new MeasurementSession(sessionId, patientId, now, null, null);
     }
+
 
     public Signal saveSignal(Long sessionId, Signal signal) {
         String sql = """
@@ -151,4 +169,28 @@ public class MeasurementSessionRepository {
         }, patientId);
     }
 
+
+    //! todo: by date
+    /**
+     * This method gets the measurement history (sessions) for a selected patient
+     * @param sessionDate the patient id corresponding to the patient from who we want to see the historial as integer
+     * @return the measurement session of the patient as list
+     */
+    public List<MeasurementSession> findSessionsByDate(LocalDateTime sessionDate) {
+        String sql = """
+            SELECT session_id, patient_id, time_stamp
+            FROM measurement_sessions
+            WHERE patient_id = ?
+            ORDER BY time_stamp DESC
+        """;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Long sessionId = rs.getLong("session_id");
+            Long pid = rs.getLong("patient_id");
+            LocalDateTime timestamp = rs.getTimestamp("time_stamp").toLocalDateTime();
+            return new MeasurementSession(sessionId, pid, timestamp, null, null);
+        }, sessionDate);
+    }
+
+    //!! TODO verify that when the doctor sees all patients (only his patients)
 }
