@@ -1,28 +1,34 @@
 package com.example.telemedicine.service;
 
-import com.example.telemedicine.domain.Role;
 import com.example.telemedicine.domain.User;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.example.telemedicine.repository.UserRepository;
 
 @Service
 public class AuthService {
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    private final UserRepository userRepository;
 
-    public AuthService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    private final JdbcTemplate jdbcTemplate;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    public AuthService(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public void register(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-    }
+        System.out.println("Registering user: " + user);
+        System.out.println("Role as string: " + user.getRole().name() + (user.getRole().name()).getClass());
 
-    /*public boolean login(String email, String password) {
-        return userRepository.findByEmail(email)
-                .map(u -> passwordEncoder.matches(password, u.getPassword()))
-                .orElse(false);
-    }*/
+        String sql = "INSERT INTO public.app_users (email, password, role) VALUES (?, ?, ?)";
+
+        try {
+            jdbcTemplate.update(sql,
+                    user.getEmail(),
+                    passwordEncoder.encode(user.getPassword()),
+                    user.getRole().name()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Error inserting user: " + e.getMessage(), e);
+        }
+    }
 }
