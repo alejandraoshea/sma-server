@@ -1,9 +1,6 @@
 package com.example.telemedicine.controller;
 
 import com.example.telemedicine.domain.MeasurementSession;
-import com.example.telemedicine.domain.Patient;
-import com.example.telemedicine.domain.Signal;
-import com.example.telemedicine.domain.Symptoms;
 import com.example.telemedicine.service.PatientService;
 import com.example.telemedicine.service.MeasurementSessionService;
 import org.springframework.web.bind.annotation.*;

@@ -4,7 +4,6 @@ import com.example.telemedicine.domain.MeasurementSession;
 import com.example.telemedicine.domain.Patient;
 import com.example.telemedicine.service.MeasurementSessionService;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
