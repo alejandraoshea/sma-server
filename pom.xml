@@ -9,7 +9,6 @@
         <version>3.4.4</version>
     </parent>
 
-    <groupId>ceu.biolab</groupId>
     <artifactId>telemedicineApp</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>telemedicineApp</name>

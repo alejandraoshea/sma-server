@@ -9,13 +9,13 @@ import java.util.Set;
 @Data
 public class Symptoms {
     private Long symptomId;
-    private Long patientId;
-    private Set<SymptomType> symptomsSet;
+    private Long measurementSessionId;
     private LocalDateTime timestamp;
+    private Set<SymptomType> symptomsSet;
 
-    public Symptoms(Long symptomId, Long patientId, Set<SymptomType> symptomsSet, LocalDateTime timestamp) {
+    public Symptoms(Long symptomId, Long measurementSessionId, Set<SymptomType> symptomsSet, LocalDateTime timestamp) {
         this.symptomId = symptomId;
-        this.patientId = patientId;
+        this.measurementSessionId = measurementSessionId;
         this.symptomsSet = symptomsSet;
         this.timestamp = timestamp;
     }
@@ -25,19 +25,19 @@ public class Symptoms {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Symptoms symptoms = (Symptoms) o;
-        return Objects.equals(symptomId, symptoms.symptomId) && Objects.equals(patientId, symptoms.patientId) && Objects.equals(symptomsSet, symptoms.symptomsSet) && Objects.equals(timestamp, symptoms.timestamp);
+        return Objects.equals(symptomId, symptoms.symptomId) && Objects.equals(measurementSessionId, symptoms.measurementSessionId) && Objects.equals(symptomsSet, symptoms.symptomsSet) && Objects.equals(timestamp, symptoms.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(symptomId, patientId, symptomsSet, timestamp);
+        return Objects.hash(symptomId, measurementSessionId, symptomsSet, timestamp);
     }
 
     @Override
     public String toString() {
         return "Symptoms{" +
                 "symptomId=" + symptomId +
-                ", patientId=" + patientId +
+                ", measurementSessionId=" + measurementSessionId +
                 ", symptomsSet=" + symptomsSet +
                 ", timestamp=" + timestamp +
                 '}';

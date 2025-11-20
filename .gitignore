@@ -43,3 +43,8 @@ Thumbs.db
 .env
 application-*.yml
 application-*.properties
+*.yml
+
+.smarttomcat/
+*.iml
+.venv/

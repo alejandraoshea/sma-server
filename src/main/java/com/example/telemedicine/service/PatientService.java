@@ -1,7 +1,10 @@
 package com.example.telemedicine.service;
 
+import com.example.telemedicine.domain.Symptoms;
 import org.springframework.stereotype.Service;
 import com.example.telemedicine.repository.PatientRepository;
+
+import java.util.List;
 
 @Service
 public class PatientService {
@@ -11,14 +14,6 @@ public class PatientService {
         this.patientRepository = patientRepository;
     }
 
+    //CRUD
 
-    //** recordSymptom or saveSymptom, getSymptomsForPatient,..?
-    /*public void recordSymptom(Symptom symptom) {
-        symptomRepository.save(symptom);
-    }
-
-    public List<Symptom> getSymptomsForPatient(Long patientId) {
-        return symptomRepository.findByPatientId(patientId);
-    }
-     */
 }
