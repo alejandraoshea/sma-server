@@ -1,6 +1,7 @@
 package com.example.telemedicine.service;
 
 import com.example.telemedicine.domain.User;
+import com.example.telemedicine.repository.mapper.UserRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,6 @@ public class AuthService {
     }
 
     public void register(User user) {
-        System.out.println("Registering user: " + user);
-        System.out.println("Role as string: " + user.getRole().name() + (user.getRole().name()).getClass());
-
         String sql = "INSERT INTO public.app_users (email, password, role) VALUES (?, ?, ?)";
 
         try {
@@ -30,5 +28,26 @@ public class AuthService {
         } catch (Exception e) {
             throw new RuntimeException("Error inserting user: " + e.getMessage(), e);
         }
+    }
+
+    public User login(String email, String rawPassword) {
+        String sql = "SELECT * FROM public.app_users WHERE email = ?";
+
+        User user;
+        try {
+            user = jdbcTemplate.queryForObject(sql, new UserRowMapper(), email);
+
+        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+            throw new RuntimeException("Invalid login: user not found");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Invalid login: " + e.getMessage());
+        }
+
+        if (user == null || !passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        return user;
     }
 }

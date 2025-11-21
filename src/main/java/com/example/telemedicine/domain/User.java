@@ -6,10 +6,20 @@ import java.util.Objects;
 
 @Data
 public class User {
-    private Integer id;
+    private Long id;
     private String email;
     private String password;
     private Role role;
+
+    public User() {
+    }
+
+    public User(Long id, String email, String hashed, Role role) {
+        this.id = id;
+        this.email = email;
+        this.password = hashed;
+        this.role = role;
+    }
 
     public User(String email, String hashed, Role role) {
         this.email = email;
