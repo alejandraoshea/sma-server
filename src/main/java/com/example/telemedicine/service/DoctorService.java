@@ -2,6 +2,7 @@ package com.example.telemedicine.service;
 
 import com.example.telemedicine.domain.MeasurementSession;
 import com.example.telemedicine.domain.Patient;
+import com.example.telemedicine.domain.Doctor;
 import com.example.telemedicine.repository.MeasurementSessionRepository;
 import org.springframework.stereotype.Service;
 import com.example.telemedicine.repository.DoctorRepository;
@@ -24,6 +25,10 @@ public class DoctorService {
 
     public List<MeasurementSession> getPatientSessions(Long patientId) {
         return measurementSessionRepository.findSessionsByPatientId(patientId);
+    }
+
+    public List<Doctor> getAllDoctors() {
+        return doctorRepository.getAllDoctors();
     }
 
 }

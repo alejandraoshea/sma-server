@@ -18,6 +18,9 @@ public class Patient {
     private Long height; // in cm
     private double weight; // kg
     private List<MeasurementSession> measurementSessionList; //contains symptoms and signals (list to preserve insertion order)
+    private Long selectedDoctorId; //id of the doctor selected by the patient
+    private DoctorApprovalStatus doctorApprovalStatus; //status of the doctor's request
+
 
     public Patient(Long patientID, Long userId, String name, String lastName, Gender gender, LocalDate birthDate,
                    Long height, double weight, List<MeasurementSession> measurementSessionList) {
@@ -32,6 +35,21 @@ public class Patient {
         this.measurementSessionList = measurementSessionList;
     }
 
+    public Patient(Long patientID, Long userId, String name, String lastName, Gender gender, LocalDate birthDate, Long height,
+                   double weight, List<MeasurementSession> measurementSessionList, Long selectedDoctorId, DoctorApprovalStatus doctorApprovalStatus) {
+        this.patientID = patientID;
+        this.userId = userId;
+        this.name = name;
+        this.lastName = lastName;
+        this.gender = gender;
+        this.birthDate = birthDate;
+        this.height = height;
+        this.weight = weight;
+        this.measurementSessionList = measurementSessionList;
+        this.selectedDoctorId = selectedDoctorId;
+        this.doctorApprovalStatus = doctorApprovalStatus;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -43,6 +61,23 @@ public class Patient {
     @Override
     public int hashCode() {
         return Objects.hash(patientID, userId, name, lastName, gender, birthDate, height, weight, measurementSessionList);
+    }
+
+    @Override
+    public String toString() {
+        return "Patient{" +
+                "patientID=" + patientID +
+                ", userId=" + userId +
+                ", name='" + name + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", gender=" + gender +
+                ", birthDate=" + birthDate +
+                ", height=" + height +
+                ", weight=" + weight +
+                ", measurementSessionList=" + measurementSessionList +
+                ", selectedDoctorId=" + selectedDoctorId +
+                ", doctorApprovalStatus=" + doctorApprovalStatus +
+                '}';
     }
 }
 

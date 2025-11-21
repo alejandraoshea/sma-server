@@ -1,6 +1,8 @@
 package com.example.telemedicine.controller;
 
+import com.example.telemedicine.domain.Doctor;
 import com.example.telemedicine.domain.MeasurementSession;
+import com.example.telemedicine.domain.Patient;
 import com.example.telemedicine.service.PatientService;
 import com.example.telemedicine.service.MeasurementSessionService;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +21,20 @@ public class PatientController {
         this.measurementSessionService = measurementSessionService;
     }
 
-
-    //CRUD and see all sessions
-
+    //** CRUD and see all sessions
     @GetMapping("/{patientId}/sessions")
     public List<MeasurementSession> getPatientSessions(@PathVariable Long patientId) {
         return measurementSessionService.getSessionsByPatient(patientId);
     }
 
-    //?? CHOOSE DOCTOR? : Mostrar doctores y luego elegir uno disponible (2 distintos)
+    /*
+    @PostMapping("/{patientId}/select-doctor/{doctorId}")
+    public Patient selectDoctorFromList(
+            @PathVariable Long patientId,
+            @PathVariable Long doctorId) {
+
+        return patientService.selectDoctorFromList(patientId, doctorId);
+    }
+
+     */
 }
