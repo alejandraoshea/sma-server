@@ -16,7 +16,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/authorization/**").permitAll()
+                        .requestMatchers("/api/authentication/**").permitAll()
                         .requestMatchers("/api/patients/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
                         .requestMatchers("/api/sessions/**").permitAll()
                         .requestMatchers("/api/doctors/**").hasAnyRole("DOCTOR", "ADMIN")
