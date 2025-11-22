@@ -64,9 +64,16 @@ public class MeasurementSessionRepository {
 
 
     public Signal saveSignal(Long sessionId, Signal signal) {
+        String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
+        Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
+
+        if (patientId == null) {
+            throw new IllegalStateException("No patient found for sessionId: " + sessionId);
+        }
+
         String sql = """
-            INSERT INTO signals (session_id, time_stamp, signal_type, patient_data)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data)
+            VALUES (?, ?, ?, ?, ?)
             """;
 
         LocalDateTime timestamp;
@@ -76,7 +83,7 @@ public class MeasurementSessionRepository {
             timestamp = LocalDateTime.now();
         }
 
-        jdbcTemplate.update(sql, sessionId, Timestamp.valueOf(timestamp),
+        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp),
                 signal.getSignalType().name(), signal.getPatientSignalData()
         );
 
@@ -85,10 +92,17 @@ public class MeasurementSessionRepository {
     }
 
     public Symptoms saveSymptoms(Long sessionId, Symptoms symptoms) {
+        String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
+        Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
+
+        if (patientId == null) {
+            throw new IllegalStateException("No patient found for sessionId: " + sessionId);
+        }
+
         String insertSql = """
-        INSERT INTO symptoms (session_id, time_stamp, patient_data, symptom_set)
-        VALUES (?, ?, ?, ?)
-        """;
+            INSERT INTO symptoms (patient_id, session_id, time_stamp, patient_data, symptom_set)
+            VALUES (?, ?, ?, ?, ?::symptoms_enum[])
+            """;
 
         LocalDateTime timestamp;
         if (symptoms.getTimestamp() != null) {
@@ -101,7 +115,7 @@ public class MeasurementSessionRepository {
                 .map(Enum::name)
                 .toArray(String[]::new);
 
-        jdbcTemplate.update(insertSql, sessionId, Timestamp.valueOf(timestamp), null, symptomArray); //** check for patientdata future
+        jdbcTemplate.update(insertSql, patientId, sessionId, Timestamp.valueOf(timestamp), null, symptomArray); //** check for patientdata future
 
         symptoms.setTimestamp(timestamp);
         return symptoms;

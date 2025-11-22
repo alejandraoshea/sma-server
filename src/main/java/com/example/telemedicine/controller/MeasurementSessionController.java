@@ -2,9 +2,12 @@ package com.example.telemedicine.controller;
 
 import com.example.telemedicine.domain.MeasurementSession;
 import com.example.telemedicine.domain.Signal;
+import com.example.telemedicine.domain.SymptomType;
 import com.example.telemedicine.domain.Symptoms;
 import org.springframework.web.bind.annotation.*;
 import com.example.telemedicine.service.MeasurementSessionService;
+
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -24,6 +27,13 @@ public class MeasurementSessionController {
     @PostMapping("/{sessionId}/symptoms")
     public Symptoms addSymptoms(@PathVariable Long sessionId, @RequestBody Symptoms symptoms) {
         return measurementSessionService.uploadSymptoms(sessionId, symptoms);
+    }
+
+    @GetMapping("/enum")
+    public List<String> getSymptomEnum() {
+        return Arrays.stream(SymptomType.values())
+                .map(Enum::name)
+                .toList();
     }
 
     @PostMapping("/{sessionId}/signals")
