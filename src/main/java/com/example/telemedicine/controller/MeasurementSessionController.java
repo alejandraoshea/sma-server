@@ -2,9 +2,14 @@ package com.example.telemedicine.controller;
 
 import com.example.telemedicine.domain.MeasurementSession;
 import com.example.telemedicine.domain.Signal;
+import com.example.telemedicine.domain.SymptomType;
 import com.example.telemedicine.domain.Symptoms;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.telemedicine.service.MeasurementSessionService;
+
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -26,6 +31,13 @@ public class MeasurementSessionController {
         return measurementSessionService.uploadSymptoms(sessionId, symptoms);
     }
 
+    @GetMapping("/enum")
+    public List<String> getSymptomEnum() {
+        return Arrays.stream(SymptomType.values())
+                .map(Enum::name)
+                .toList();
+    }
+
     @PostMapping("/{sessionId}/signals")
     public Signal addSignal(@PathVariable Long sessionId, @RequestBody Signal signal) {
         return measurementSessionService.uploadSignal(sessionId, signal);
@@ -44,6 +56,22 @@ public class MeasurementSessionController {
     @GetMapping("/{patientId}/sessions")
     public List<MeasurementSession> getPatientSessions(@PathVariable Long patientId) {
         return measurementSessionService.getSessionsByPatient(patientId);
+    }
+
+    //al parecer post mapping es mandar datos al servidor
+    //si hay varios patients no diferencia entre patients potque no tienen el patient ID,
+    // habría que mandar el patient ID al client cuando empiece la conxión para poder mandar información
+    // diferenciada al server no?????
+    @PostMapping(value="/ecg", consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public byte[] receiveECG(@RequestBody byte[] fileBytes) {
+        //  TODO AQUI VA EL PROCESAMIENTO
+        return fileBytes;
+    }
+
+    @PostMapping(value="/emg", consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public byte[] receiveEMG(@RequestBody byte[] fileBytes) {
+        //TODO AQUI VA EL PROCESAMIENTO
+        return fileBytes;
     }
 
 }

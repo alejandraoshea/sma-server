@@ -1,7 +1,10 @@
 package com.example.telemedicine.repository;
 
+import com.example.telemedicine.domain.Gender;
 import com.example.telemedicine.domain.MeasurementSession;
+import com.example.telemedicine.domain.Gender;
 import com.example.telemedicine.domain.Patient;
+import com.example.telemedicine.domain.Doctor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -34,7 +37,7 @@ public class DoctorRepository {
                     rs.getLong("user_id"),
                     rs.getString("name"),
                     rs.getString("surname"),
-                    rs.getString("gender") != null ? com.example.telemedicine.domain.Gender.valueOf(rs.getString("gender")) : null,
+                    rs.getString("gender") != null ? Gender.valueOf(rs.getString("gender")) : null,
                     rs.getDate("birth_date").toLocalDate(),
                     rs.getLong("height"),
                     rs.getDouble("weight"),
@@ -42,6 +45,25 @@ public class DoctorRepository {
             );
             return patient;
         }, doctorId);
+    }
+
+    public List<Doctor> getAllDoctors() {
+        String sql = """
+            SELECT doctor_id, user_id, name, surname, gender
+            FROM doctors
+            ORDER BY name
+        """;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Doctor doctor = new Doctor(
+                    rs.getLong("doctor_id"),
+                    rs.getLong("user_id"),
+                    rs.getString("name"),
+                    rs.getString("surname"),
+                    rs.getString("gender") != null ? Gender.valueOf(rs.getString("gender")) : null
+            );
+            return doctor;
+        });
     }
 
 }
