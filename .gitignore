@@ -48,3 +48,5 @@ application-*.properties
 .smarttomcat/
 *.iml
 .venv/
+
+src/main/resources/telemedicine.p12
