@@ -1,12 +1,13 @@
 package com.example.telemedicine.controller;
 
+import com.example.telemedicine.config.OperatorConfig;
 import com.example.telemedicine.service.AdminService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -14,37 +15,42 @@ import java.util.Map;
 public class AdminController {
 
     private final AdminService adminService;
+    private final OperatorConfig operatorConfig;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, OperatorConfig operatorConfig) {
         this.adminService = adminService;
+        this.operatorConfig = operatorConfig;
     }
 
     @PostMapping("/start-server")
-    public ResponseEntity<?> startServer() {
-        try {
-            adminService.start();
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Server started successfully");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(400).body(error);
+    public ResponseEntity<?> startServer(
+            @RequestHeader("X-OP-USER") String opUser,
+            @RequestHeader("X-OP-PASS") String opPass) {
+
+        if (!operatorConfig.getUsername().equals(opUser) ||
+                !operatorConfig.getPassword().equals(opPass)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
+
+        adminService.start();
+        return ResponseEntity.ok(Map.of("message", "Server started successfully"));
     }
 
     @PostMapping("/stop-server")
-    public ResponseEntity<?> stopServer() {
+    public ResponseEntity<?> stopServer(
+            @RequestHeader("X-OP-USER") String opUser,
+            @RequestHeader("X-OP-PASS") String opPass) {
+
+        if (!operatorConfig.getUsername().equals(opUser) ||
+                !operatorConfig.getPassword().equals(opPass)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+
         try {
             adminService.stop();
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Server stopped successfully");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of("message", "Server stopped successfully"));
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(400).body(error);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-
 }
