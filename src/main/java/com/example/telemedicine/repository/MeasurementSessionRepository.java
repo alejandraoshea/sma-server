@@ -134,7 +134,8 @@ public class MeasurementSessionRepository {
                 rs.getLong("session_id"),
                 rs.getTimestamp("time_stamp").toLocalDateTime(),
                 Enum.valueOf(com.example.telemedicine.domain.SignalType.class, rs.getString("signal_type")),
-                rs.getString("patient_signal_data")
+                rs.getString("patient_signal_data"),
+                rs.getInt(0) //change to fs
         ), sessionId);
     }
 
