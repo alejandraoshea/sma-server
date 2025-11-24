@@ -20,6 +20,12 @@ public class Doctor {
         this.gender = gender;
     }
 
+    public Doctor(Long doctorID, String name, String lastName, Gender gender) {
+        this.doctorID = doctorID;
+        this.name = name;
+        this.lastName = lastName;
+        this.gender = gender;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -40,7 +46,7 @@ public class Doctor {
                 "doctorID=" + doctorID +
                 ", userId=" + userId +
                 ", name='" + name + '\'' +
-                ", lastName='" + lastName + '\'' +
+                ", surname='" + lastName + '\'' +
                 ", gender=" + gender +
                 '}';
     }
