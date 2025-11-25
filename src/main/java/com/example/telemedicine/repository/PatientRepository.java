@@ -1,6 +1,9 @@
 package com.example.telemedicine.repository;
 
 import com.example.telemedicine.domain.*;
+import com.example.telemedicine.signal.ECGProcessor;
+import com.example.telemedicine.signal.EMGProcessor;
+import com.example.telemedicine.signal.SignalUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -15,6 +18,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
+
 
 @Repository
 public class PatientRepository {
@@ -323,6 +327,8 @@ public class PatientRepository {
 
         String firstLine;
         String data;
+        String finalData;
+
         try {
             firstLine = reader.readLine();
             data = reader.readLine();
@@ -338,6 +344,19 @@ public class PatientRepository {
 
         int fs = Integer.parseInt(firstLine.trim());
 
+        //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
+        double[] rawData = SignalUtils.stringToDoubleArray(data);
+        double[] signalMV = SignalUtils.convertToMV(rawData, 3.0, 10, 1000);
+        //FILTER
+        double[] passFilteredSignal = SignalUtils.bandpassFilter(signalMV, fs, 50, 300, 4);
+        double[] filteredSignal = SignalUtils.notchFilter(passFilteredSignal, fs, 60.0, 30);
+        //FOR SAVING
+        finalData = SignalUtils.doubleArrayToString(filteredSignal);
+
+        //FOR VISUALIZING
+        EMGProcessor.ContractionResult contractions = EMGProcessor.detectContractions(filteredSignal, fs, 0.165, 0.10);
+        EMGProcessor.plotEMGResults(fs, filteredSignal, contractions.envelope, contractions.onsets, contractions.offsets, String.valueOf(patientId));
+
         String sql = """
         INSERT INTO signals (patient_id, session_id, time_stamp, patient_data, fs)
         VALUES (?, ?, ?, ?, ?)
@@ -346,12 +365,13 @@ public class PatientRepository {
         LocalDateTime timestamp = LocalDateTime.now();
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
+
         jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setLong(1, patientId);
             ps.setLong(2, sessionId);
             ps.setTimestamp(3, Timestamp.valueOf(timestamp));
-            ps.setString(4, data);
+            ps.setString(4, finalData);
             ps.setInt(5, fs);
             return ps;
         }, keyHolder);
@@ -383,6 +403,7 @@ public class PatientRepository {
 
         String firstLine;
         String data;
+        String finalData;
         try {
             firstLine = reader.readLine();
             data = reader.readLine();
@@ -399,6 +420,22 @@ public class PatientRepository {
         int fs = Integer.parseInt(firstLine.trim());
 
         //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
+        double[] rawECG = SignalUtils.stringToDoubleArray(data);
+        double[] ecgSignal = SignalUtils.convertToMV(rawECG, 3.3, 10, 1100);
+
+        //FILTER
+        double[] filteredECG = ECGProcessor.applyFilters(ecgSignal, fs);
+        //FOR SAVING
+        finalData = SignalUtils.doubleArrayToString(filteredECG);
+
+        //FOR VISUALIZING
+        ECGProcessor.QRSResult qrs = ECGProcessor.detectQRSComplexes(filteredECG, fs);
+        double[] time = new double[filteredECG.length];
+        for (int i = 0; i < time.length; i++) {
+            time[i] = i / fs;
+        }
+        ECGProcessor.plotECGResults(time, filteredECG, qrs.qPeaks, "Análisis ECG (Simulación Servidor)", 240);
+        //------------------------------------------------------------------------------------------------------------------------------
 
         String sql = """
         INSERT INTO signals (patient_id, session_id, time_stamp, patient_data, fs)
@@ -413,7 +450,7 @@ public class PatientRepository {
             ps.setLong(1, patientId);
             ps.setLong(2, sessionId);
             ps.setTimestamp(3, Timestamp.valueOf(timestamp));
-            ps.setString(4, data);
+            ps.setString(4, finalData);
             ps.setInt(5, fs);
             return ps;
         }, keyHolder);

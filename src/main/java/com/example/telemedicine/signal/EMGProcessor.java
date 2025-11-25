@@ -96,15 +96,6 @@ public class EMGProcessor {
         return Arrays.copyOfRange(paddedEnvelope, 0, originalLength);
     }
 
-    // --- LÓGICA DE DETECCIÓN ---
-
-    public static double[] convertToMV(double[] rawSignal, double vcc, int resolution, int gain) {
-        // Si tus datos ya vienen en mV o el formato es distinto, ajusta esto
-        int bits = 10;
-        return Arrays.stream(rawSignal)
-                .map(value -> ((value / Math.pow(2, bits)) - 0.5) * vcc / gain * 1000)
-                .toArray();
-    }
 
     public static ContractionResult detectContractions(double[] signal, double fs, double thresholdRatio, double minDurationSec) {
         System.out.println("Calculando envolvente de Hilbert...");
@@ -204,40 +195,5 @@ public class EMGProcessor {
         }
 
         new SwingWrapper<>(chart).displayChart();
-    }
-
-    // --- MAIN ---
-    public static void main(String[] args) {
-        try {
-            String filePath = "C:/Users/phora/OneDrive/Documentos/Uni_Ceu/Tercer año/Segundo Cuatri/Señales Biomédicas/Prácticas/Pablo_Morales/ecg_SERVER_READY.txt";
-
-            String subjectId = "1";
-
-            System.out.println("1. Leyendo archivo EMG...");
-            SignalUtils.PatientSignals info = SignalUtils.readAndParseFile(filePath);
-            double[] rawData = SignalUtils.stringToDoubleArray(info.dataString);
-
-            System.out.println("   -> Frecuencia: " + info.fs + " Hz, Muestras: " + rawData.length);
-
-            // Conversión
-            double[] signalMV = convertToMV(rawData, 3.0, 10, 1000);
-
-            System.out.println("2. Filtrando...");
-            double[] passFilteredSignal = SignalUtils.bandpassFilter(signalMV, (double)info.fs, 50, 300, 4);
-            double[] filteredSignal = SignalUtils.notchFilter(passFilteredSignal, (double)info.fs, 60.0, 30);
-
-            System.out.println("3. Detectando contracciones...");
-            ContractionResult contractions = detectContractions(filteredSignal, (double)info.fs, 0.165, 0.10);
-
-            System.out.println("Resultados:");
-            System.out.println("Contracciones detectadas: " + contractions.onsets.size());
-
-            plotEMGResults((double)info.fs, filteredSignal, contractions.envelope, contractions.onsets, contractions.offsets, subjectId);
-
-        } catch (IOException e) {
-            System.err.println("Error IO: " + e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }
