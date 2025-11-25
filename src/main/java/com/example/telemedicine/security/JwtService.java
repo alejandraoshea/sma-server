@@ -12,9 +12,9 @@ import java.security.Key;
 import java.util.Date;
 
 /**
- * Service class responsible for creating and validating JSON Web Tokens (JWTs)
- * for the Telemedicine application to securely transmit information between the
- * frontend and backend. This service handles token generation and extracting
+ * Service class responsible for creating and validating JWTs for
+ * the application to securely transmit information between the frontend
+ * and backend. This service handles token generation and extracting
  * claims from existing tokens.
  */
 @Service
