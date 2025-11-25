@@ -37,7 +37,7 @@ public class DoctorController {
      * @param patientId the patient's ID
      * @return list of measurement sessions
      */
-    @GetMapping("/sessions/patients/{patientId}/sessions")
+    @GetMapping("/sessions/patients/{patientId}")
     public List<MeasurementSession> getPatientSessions(@PathVariable Long patientId) {
         return patientService.getSessionsByPatient(patientId);
     }

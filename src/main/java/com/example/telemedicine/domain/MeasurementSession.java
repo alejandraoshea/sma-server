@@ -5,6 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 //** recording session grouping multiple signals
 @Data
@@ -12,14 +13,14 @@ public class MeasurementSession {
     private Long sessionId;
     private Long patientId;
     private LocalDateTime timeStamp;
-    private Symptoms symptoms;
+    private Set<SymptomType> symptomsSet;
     private List<Signal> signals;
 
-    public MeasurementSession(Long sessionId, Long patientId, LocalDateTime timeStamp, Symptoms symptoms, List<Signal> signals) {
+    public MeasurementSession(Long sessionId, Long patientId, LocalDateTime timeStamp, Set<SymptomType> symptomsSet, List<Signal> signals) {
         this.sessionId = sessionId;
         this.patientId = patientId;
         this.timeStamp = timeStamp;
-        this.symptoms = symptoms;
+        this.symptomsSet = symptomsSet;
         this.signals = signals;
     }
 
@@ -28,12 +29,12 @@ public class MeasurementSession {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MeasurementSession that = (MeasurementSession) o;
-        return Objects.equals(sessionId, that.sessionId) && Objects.equals(patientId, that.patientId) && Objects.equals(timeStamp, that.timeStamp) && Objects.equals(symptoms, that.symptoms) && Objects.equals(signals, that.signals);
+        return Objects.equals(sessionId, that.sessionId) && Objects.equals(patientId, that.patientId) && Objects.equals(timeStamp, that.timeStamp) && Objects.equals(symptomsSet, that.symptomsSet) && Objects.equals(signals, that.signals);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(sessionId, patientId, timeStamp, symptoms, signals);
+        return Objects.hash(sessionId, patientId, timeStamp, symptomsSet, signals);
     }
 
     @Override
@@ -42,7 +43,7 @@ public class MeasurementSession {
                 "sessionId=" + sessionId +
                 ", patientId=" + patientId +
                 ", timeStamp=" + timeStamp +
-                ", symptoms=" + symptoms +
+                ", symptomsSet=" + symptomsSet +
                 ", signals=" + signals +
                 '}';
     }
