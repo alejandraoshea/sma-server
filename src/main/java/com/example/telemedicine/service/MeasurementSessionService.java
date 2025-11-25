@@ -7,11 +7,12 @@ import com.example.telemedicine.repository.PatientRepository;
 import org.springframework.stereotype.Service;
 import com.example.telemedicine.repository.MeasurementSessionRepository;
 
+import java.io.IOException;
 import java.util.List;
 
 
 @Service
-public class MeasurementSessionService {
+public class   MeasurementSessionService {
     private final MeasurementSessionRepository measurementSessionRepository;
 
     public MeasurementSessionService(MeasurementSessionRepository measurementSessionRepository) {
@@ -40,6 +41,14 @@ public class MeasurementSessionService {
 
     public List<MeasurementSession> getSessionsByPatient(Long patientId) {
         return measurementSessionRepository.findSessionsByPatientId(patientId);
+    }
+
+    public Signal addEMGToMeassurementSession(byte[] signal, Long sessionId) throws IOException {
+        return measurementSessionRepository.addEMGToMeassurementSession(signal, sessionId);
+    }
+
+    public Signal addECGToMeassurementSession(byte[] signal, Long sessionId) {
+        return measurementSessionRepository.addECGToMeassurementSession(signal, sessionId);
     }
 
 
