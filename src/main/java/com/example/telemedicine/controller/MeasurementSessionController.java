@@ -63,14 +63,14 @@ public class MeasurementSessionController {
     //si hay varios patients no diferencia entre patients potque no tienen el patient ID,
     // habría que mandar el patient ID al client cuando empiece la conxión para poder mandar información
     // diferenciada al server no?????
-    @PostMapping(value="/{sessionId}/ecg", consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PostMapping(value="/{sessionId}/{patientId}/ecg", consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public Signal receiveECG(@PathVariable("sessionId") Long sessionId, @RequestBody byte[] fileBytes) {
-        return measurementSessionService.addECGToMeassurementSession(fileBytes, sessionId);
+        return measurementSessionService.addECG(fileBytes, sessionId);
     }
 
-    @PostMapping(value="/{sessionId}/emg", consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PostMapping(value="/{sessionId}/{patientId}/emg", consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public Signal receiveEMG(@PathVariable("sessionId") Long sessionId, @RequestBody byte[] fileBytes) throws IOException {
-        return measurementSessionService.addEMGToMeassurementSession(fileBytes, sessionId);
+        return measurementSessionService.addEMG(fileBytes, sessionId);
     }
 
 }

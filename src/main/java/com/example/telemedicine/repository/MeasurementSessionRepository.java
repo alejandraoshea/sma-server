@@ -210,7 +210,7 @@ public class MeasurementSessionRepository {
 
     //!! TODO verify that when the doctor sees all patients (only his patients)
 
-    public Signal addEMGToMeassurementSession(byte[] fileBytes, Long sessionId) throws IOException {
+    public Signal addEMG(byte[] fileBytes, Long sessionId) throws IOException {
         String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
         Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
 
@@ -252,7 +252,7 @@ public class MeasurementSessionRepository {
         return new Signal(patientId, sessionId, timestamp, SignalType.EMG, data, fs);
     }
 
-    public Signal addECGToMeassurementSession(byte[] fileBytes, Long sessionId) {
+    public Signal addECG(byte[] fileBytes, Long sessionId) {
         String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
         Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
 

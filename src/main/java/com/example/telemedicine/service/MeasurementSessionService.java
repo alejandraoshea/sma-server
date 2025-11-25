@@ -43,12 +43,12 @@ public class   MeasurementSessionService {
         return measurementSessionRepository.findSessionsByPatientId(patientId);
     }
 
-    public Signal addEMGToMeassurementSession(byte[] signal, Long sessionId) throws IOException {
-        return measurementSessionRepository.addEMGToMeassurementSession(signal, sessionId);
+    public Signal addEMG(byte[] signal, Long sessionId) throws IOException {
+        return measurementSessionRepository.addEMG(signal, sessionId);
     }
 
-    public Signal addECGToMeassurementSession(byte[] signal, Long sessionId) {
-        return measurementSessionRepository.addECGToMeassurementSession(signal, sessionId);
+    public Signal addECG(byte[] signal, Long sessionId) {
+        return measurementSessionRepository.addECG(signal, sessionId);
     }
 
 
