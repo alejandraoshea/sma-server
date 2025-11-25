@@ -5,7 +5,6 @@ import com.example.telemedicine.domain.Signal;
 import com.example.telemedicine.domain.SymptomType;
 import com.example.telemedicine.domain.Symptoms;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.telemedicine.service.MeasurementSessionService;
 

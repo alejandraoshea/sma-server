@@ -32,4 +32,9 @@ public class PatientController {
         return patientService.selectDoctorFromList(patientId, doctorId);
     }
 
+    @GetMapping("/{patientId}")
+    public Patient getPatient(@PathVariable Long patientId) {
+        return patientService.findById(patientId);
+    }
+
 }

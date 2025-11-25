@@ -45,6 +45,11 @@ public class DoctorController {
         return doctorService.getAllDoctors();
     }
 
+    @GetMapping("/{doctorId}")
+    public Doctor findDoctorById(@PathVariable Long doctorId){
+        return doctorService.findDoctorById(doctorId);
+    }
+
     @GetMapping("/{doctorId}/requests")
     public List<Patient> getPendingRequests(@PathVariable Long doctorId){
         return doctorService.getPendingRequests(doctorId);

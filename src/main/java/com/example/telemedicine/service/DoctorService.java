@@ -43,4 +43,7 @@ public class DoctorService {
         return doctorRepository.getPendingRequests(doctorId);
     }
 
+    public Doctor findDoctorById(Long doctorId){
+        return doctorRepository.findDoctorById(doctorId);
+    }
 }

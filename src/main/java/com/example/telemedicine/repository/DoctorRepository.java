@@ -140,4 +140,20 @@ public class DoctorRepository {
         return jdbcTemplate.queryForObject(sql, new PatientRowMapper(), patientId);
     }
 
+    public Doctor findDoctorById(Long doctorId){
+        String sql = """
+            SELECT doctor_id, name, surname, gender, specialization
+            FROM doctors 
+            WHERE doctor_id = ?
+        """;
+
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
+                new Doctor(
+                        rs.getLong("doctor_id"),
+                        rs.getString("name"),
+                        rs.getString("surname"),
+                        Gender.valueOf(rs.getString("gender"))
+                ), doctorId);
+    }
+
 }
