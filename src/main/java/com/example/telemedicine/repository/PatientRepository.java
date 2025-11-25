@@ -221,7 +221,7 @@ public class PatientRepository {
      */
     public List<Signal> findSignalsBySessionId(Long sessionId) {
         String sql = """
-            SELECT signal_id, session_id, patient_id, time_stamp, signal_type, patient_signal_data
+            SELECT signal_id, session_id, patient_id, time_stamp, signal_type, patient_data
             FROM signals
             WHERE session_id = ?
             ORDER BY time_stamp
@@ -232,8 +232,8 @@ public class PatientRepository {
                 rs.getLong("session_id"),
                 rs.getTimestamp("time_stamp").toLocalDateTime(),
                 Enum.valueOf(com.example.telemedicine.domain.SignalType.class, rs.getString("signal_type")),
-                rs.getString("patient_signal_data"),
-                rs.getInt(0) //change to fs
+                rs.getString("patient_data"),
+                rs.getInt("fs")
         ), sessionId);
     }
 
@@ -291,25 +291,28 @@ public class PatientRepository {
     //! todo: by date
 
     /**
-     * This method gets the measurement history (sessions) for a selected patient
-     * @param sessionDate the patient id corresponding to the patient from who we want to see the historial as integer
-     * @return the measurement session of the patient as list
+     * Retrieves all measurement sessions that occurred on a specific date.
+     *
+     * @param sessionDate The date to filter sessions by.
+     * @return List of MeasurementSession objects.
      */
     public List<MeasurementSession> findSessionsByDate(LocalDateTime sessionDate) {
         String sql = """
-            SELECT session_id, patient_id, time_stamp
-            FROM measurement_sessions
-            WHERE patient_id = ?
-            ORDER BY time_stamp DESC
+        SELECT session_id, patient_id, time_stamp
+        FROM measurement_sessions
+        WHERE DATE(time_stamp) = DATE(?)
+        ORDER BY time_stamp DESC
         """;
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             Long sessionId = rs.getLong("session_id");
             Long pid = rs.getLong("patient_id");
             LocalDateTime timestamp = rs.getTimestamp("time_stamp").toLocalDateTime();
+
             return new MeasurementSession(sessionId, pid, timestamp, null, null);
         }, sessionDate);
     }
+
 
     /**
      * Reads an uploaded EMG file (expected format: first line = sampling rate,
@@ -330,8 +333,8 @@ public class PatientRepository {
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fileBytes)));
 
-        String firstLine = null;
-        String data = null;
+        String firstLine;
+        String data;
         try {
             firstLine = reader.readLine();
             data = reader.readLine();
@@ -339,28 +342,37 @@ public class PatientRepository {
             throw new IllegalStateException("EMG signal file is empty");
         }
 
-        if (firstLine == null || firstLine.isBlank()) {
+        if (firstLine == null || firstLine.isBlank())
             throw new IllegalStateException("Missing sampling rate (first line).");
-        }
 
-        if (data == null || data.isBlank()) {
+        if (data == null || data.isBlank())
             throw new IllegalStateException("Missing data line (second line).");
-        }
 
         int fs = Integer.parseInt(firstLine.trim());
 
-        //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
-
         String sql = """
-            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, fs)
-            VALUES (?, ?, ?, ?, ?)
-            """;
+        INSERT INTO signals (patient_id, session_id, time_stamp, patient_data, fs)
+        VALUES (?, ?, ?, ?, ?)
+        """;
 
         LocalDateTime timestamp = LocalDateTime.now();
-        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp), SignalType.EMG, data, fs);
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        return new Signal(patientId, sessionId, timestamp, SignalType.EMG, data, fs);
+        jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setLong(1, patientId);
+            ps.setLong(2, sessionId);
+            ps.setTimestamp(3, Timestamp.valueOf(timestamp));
+            ps.setString(4, data);
+            ps.setInt(5, fs);
+            return ps;
+        }, keyHolder);
+
+        Long signalId = ((Number) keyHolder.getKeys().get("signal_id")).longValue();
+
+        return new Signal(signalId, sessionId, timestamp, SignalType.EMG, data, fs);
     }
+
 
     /**
      * Reads an uploaded ECG file (expected format: first line = sampling rate,
@@ -381,8 +393,8 @@ public class PatientRepository {
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fileBytes)));
 
-        String firstLine = null;
-        String data = null;
+        String firstLine;
+        String data;
         try {
             firstLine = reader.readLine();
             data = reader.readLine();
@@ -390,28 +402,39 @@ public class PatientRepository {
             throw new IllegalStateException("ECG signal file is empty");
         }
 
-        if (firstLine == null || firstLine.isBlank()) {
+        if (firstLine == null || firstLine.isBlank())
             throw new IllegalStateException("Missing sampling rate (first line).");
-        }
 
-        if (data == null || data.isBlank()) {
+        if (data == null || data.isBlank())
             throw new IllegalStateException("Missing data line (second line).");
-        }
 
         int fs = Integer.parseInt(firstLine.trim());
 
         //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
 
         String sql = """
-            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, sampling_rate)
-            VALUES (?, ?, ?, ?, ?)
-            """;
+        INSERT INTO signals (patient_id, session_id, time_stamp, patient_data, fs)
+        VALUES (?, ?, ?, ?, ?)
+        """;
 
         LocalDateTime timestamp = LocalDateTime.now();
-        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp), SignalType.ECG, data, fs);
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        return new Signal(patientId, sessionId, timestamp, SignalType.ECG, data, fs);
+        jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setLong(1, patientId);
+            ps.setLong(2, sessionId);
+            ps.setTimestamp(3, Timestamp.valueOf(timestamp));
+            ps.setString(4, data);
+            ps.setInt(5, fs);
+            return ps;
+        }, keyHolder);
+
+        Long signalId = ((Number) keyHolder.getKeys().get("signal_id")).longValue();
+
+        return new Signal(signalId, sessionId, timestamp, SignalType.ECG, data, fs);
     }
+
 
 
 }
