@@ -61,7 +61,7 @@ public class PatientController {
      * @return saved symptoms
      */
     @PostMapping("/sessions/{sessionId}/symptoms")
-    public Symptoms addSymptoms(@PathVariable Long sessionId, @RequestBody Symptoms symptoms) {
+    public Set<SymptomType> addSymptoms(@PathVariable Long sessionId, @RequestBody Set<SymptomType> symptoms) {
         return patientService.uploadSymptoms(sessionId, symptoms);
     }
 
