@@ -185,7 +185,6 @@ public class MeasurementSessionRepository {
         }, patientId);
     }
 
-
     //! todo: by date
     /**
      * This method gets the measurement history (sessions) for a selected patient
@@ -210,7 +209,7 @@ public class MeasurementSessionRepository {
 
     //!! TODO verify that when the doctor sees all patients (only his patients)
 
-    public Signal addEMG(byte[] fileBytes, Long sessionId) throws IOException {
+    public Signal addEMG(byte[] fileBytes, Long sessionId) {
         String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
         Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
 
