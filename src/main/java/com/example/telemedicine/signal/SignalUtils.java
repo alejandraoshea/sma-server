@@ -79,6 +79,13 @@ public class SignalUtils {
     }
 
     // --- 4. FILTROS MATEMÁTICOS GENÉRICOS (IIRJ) ---
+    public static double[] convertToMV(double[] rawSignal, double vcc, int resolution, int gain) {
+        // Si tus datos ya vienen en mV o el formato es distinto, ajusta esto
+        int bits = 10;
+        return Arrays.stream(rawSignal)
+                .map(value -> ((value / Math.pow(2, bits)) - 0.5) * vcc / gain * 1000)
+                .toArray();
+    }
 
     public static double[] bandpassFilter(double[] signal, double fs, double lowcut, double highcut, int order) {
         Butterworth butterworth = new Butterworth();
@@ -115,6 +122,21 @@ public class SignalUtils {
             backwardFiltered[i] = butterworth.filter(forwardFiltered[i]);
         }
         return backwardFiltered;
+    }
+    public static String doubleArrayToString(double[] signal) {
+        if (signal == null || signal.length == 0) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < signal.length; i++) {
+            sb.append(signal[i]);
+            // Añadimos coma solo si no es el último elemento
+            if (i < signal.length - 1) {
+                sb.append(",");
+            }
+        }
+        return sb.toString();
     }
 }
 
