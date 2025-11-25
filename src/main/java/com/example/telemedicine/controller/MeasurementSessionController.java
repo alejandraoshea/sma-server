@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import com.example.telemedicine.service.MeasurementSessionService;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -61,16 +62,14 @@ public class MeasurementSessionController {
     //si hay varios patients no diferencia entre patients potque no tienen el patient ID,
     // habría que mandar el patient ID al client cuando empiece la conxión para poder mandar información
     // diferenciada al server no?????
-    @PostMapping(value="/ecg", consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public byte[] receiveECG(@RequestBody byte[] fileBytes) {
-        //  TODO AQUI VA EL PROCESAMIENTO
-        return fileBytes;
+    @PostMapping(value="/{sessionId}/{patientId}/ecg", consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public Signal receiveECG(@PathVariable("sessionId") Long sessionId, @RequestBody byte[] fileBytes) {
+        return measurementSessionService.addECG(fileBytes, sessionId);
     }
 
-    @PostMapping(value="/emg", consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public byte[] receiveEMG(@RequestBody byte[] fileBytes) {
-        //TODO AQUI VA EL PROCESAMIENTO
-        return fileBytes;
+    @PostMapping(value="/{sessionId}/{patientId}/emg", consumes=MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public Signal receiveEMG(@PathVariable("sessionId") Long sessionId, @RequestBody byte[] fileBytes) throws IOException {
+        return measurementSessionService.addEMG(fileBytes, sessionId);
     }
 
 }

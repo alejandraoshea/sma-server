@@ -1,14 +1,15 @@
 package com.example.telemedicine.repository;
 
-import com.example.telemedicine.domain.MeasurementSession;
-import com.example.telemedicine.domain.Signal;
-import com.example.telemedicine.domain.SymptomType;
-import com.example.telemedicine.domain.Symptoms;
+import com.example.telemedicine.domain.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -184,7 +185,6 @@ public class MeasurementSessionRepository {
         }, patientId);
     }
 
-
     //! todo: by date
     /**
      * This method gets the measurement history (sessions) for a selected patient
@@ -208,4 +208,88 @@ public class MeasurementSessionRepository {
     }
 
     //!! TODO verify that when the doctor sees all patients (only his patients)
+
+    public Signal addEMG(byte[] fileBytes, Long sessionId) {
+        String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
+        Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
+
+        if (patientId == null) {
+            throw new IllegalStateException("No patient found for sessionId: " + sessionId);
+        }
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fileBytes)));
+
+        String firstLine = null;
+        String data = null;
+        try {
+            firstLine = reader.readLine();
+            data = reader.readLine();
+        } catch (IOException e) {
+            throw new IllegalStateException("EMG signal file is empty");
+        }
+
+        if (firstLine == null || firstLine.isBlank()) {
+            throw new IllegalStateException("Missing sampling rate (first line).");
+        }
+
+        if (data == null || data.isBlank()) {
+            throw new IllegalStateException("Missing data line (second line).");
+        }
+
+        int fs = Integer.parseInt(firstLine.trim());
+
+        //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
+
+        String sql = """
+            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, fs)
+            VALUES (?, ?, ?, ?, ?)
+            """;
+
+        LocalDateTime timestamp = LocalDateTime.now();
+        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp), SignalType.EMG, data, fs);
+
+        return new Signal(patientId, sessionId, timestamp, SignalType.EMG, data, fs);
+    }
+
+    public Signal addECG(byte[] fileBytes, Long sessionId) {
+        String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
+        Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
+
+        if (patientId == null) {
+            throw new IllegalStateException("No patient found for sessionId: " + sessionId);
+        }
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fileBytes)));
+
+        String firstLine = null;
+        String data = null;
+        try {
+            firstLine = reader.readLine();
+            data = reader.readLine();
+        } catch (IOException e) {
+            throw new IllegalStateException("ECG signal file is empty");
+        }
+
+        if (firstLine == null || firstLine.isBlank()) {
+            throw new IllegalStateException("Missing sampling rate (first line).");
+        }
+
+        if (data == null || data.isBlank()) {
+            throw new IllegalStateException("Missing data line (second line).");
+        }
+
+        int fs = Integer.parseInt(firstLine.trim());
+
+        //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
+
+        String sql = """
+            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, sampling_rate)
+            VALUES (?, ?, ?, ?, ?)
+            """;
+
+        LocalDateTime timestamp = LocalDateTime.now();
+        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp), SignalType.ECG, data, fs);
+
+        return new Signal(patientId, sessionId, timestamp, SignalType.ECG, data, fs);
+    }
 }
