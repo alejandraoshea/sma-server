@@ -69,7 +69,7 @@ public class PatientService {
      * @param symptoms the symptoms data
      * @return saved symptoms object
      */
-    public Symptoms uploadSymptoms(Long sessionId, Symptoms symptoms) {
+    public Set<SymptomType> uploadSymptoms(Long sessionId, Set<SymptomType> symptoms) {
         return patientRepository.saveSymptoms(sessionId, symptoms);
     }
 

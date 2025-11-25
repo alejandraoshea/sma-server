@@ -162,39 +162,30 @@ public class PatientRepository {
     }
 
     /**
-     * Saves a new Symptoms record for the given session.
-     * @param sessionId The ID of the session to attach the symptoms to.
-     * @param symptoms  The symptoms object to store (timestamp is auto-filled if null).
-     * @return The same Symptoms instance with timestamp populated.
-     * @throws IllegalStateException if the session does not belong to any patient.
+     * Saves symptoms directly into the measurement_sessions table.
+     *
+     * @param sessionId The ID of the session to update.
+     * @param symptoms  The set of symptoms.
+     * @return The saved set of SymptomType.
+     * @throws IllegalArgumentException if symptoms or its set is null.
      */
-    public Symptoms saveSymptoms(Long sessionId, Symptoms symptoms) {
-        String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
-        Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
-
-        if (patientId == null) {
-            throw new IllegalStateException("No patient found for sessionId: " + sessionId);
+    public Set<SymptomType> saveSymptoms(Long sessionId, Set<SymptomType> symptoms) {
+        if (symptoms == null){
+            throw new IllegalArgumentException("Symptoms set cannot be null.");
         }
 
-        String insertSql = """
-            INSERT INTO symptoms (patient_id, session_id, time_stamp, patient_data, symptom_set)
-            VALUES (?, ?, ?, ?, ?::symptoms_enum[])
+        String sql = """
+            UPDATE measurement_sessions
+            SET symptoms = ?::symptoms_enum[]
+            WHERE session_id = ?
             """;
 
-        LocalDateTime timestamp;
-        if (symptoms.getTimestamp() != null) {
-            timestamp = symptoms.getTimestamp();
-        } else {
-            timestamp = LocalDateTime.now();
-        }
-
-        String[] symptomArray = symptoms.getSymptomsSet().stream()
+        String[] symptomArray = symptoms.stream()
                 .map(Enum::name)
                 .toArray(String[]::new);
 
-        jdbcTemplate.update(insertSql, patientId, sessionId, Timestamp.valueOf(timestamp), null, symptomArray); //** check for patientdata future
+        jdbcTemplate.update(sql, (Object) symptomArray, sessionId);
 
-        symptoms.setTimestamp(timestamp);
         return symptoms;
     }
 
