@@ -7,6 +7,7 @@ import com.example.telemedicine.repository.PatientRepository;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class PatientService {
@@ -86,7 +87,7 @@ public class PatientService {
      * @param sessionId ID of the session
      * @return list of symptoms
      */
-    public List<Symptoms> getSymptomsBySession(Long sessionId) {
+    public Set<SymptomType> getSymptomsBySession(Long sessionId) {
         return patientRepository.findSymptomsBySessionId(sessionId);
     }
 
