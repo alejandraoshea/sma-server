@@ -24,6 +24,11 @@ public class PatientRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /**
+     * Retrieves all symptoms recorded in a specific measurement session
+     * @param sessionId ID of the session to query.
+     * @return List of Symptoms objects for that session. Empty list if none exist.
+     */
     public List<Symptoms> findBySessionId(Long sessionId) {
         String sql = "SELECT symptom_id, session_id, symptom_set, time_stamp FROM symptoms WHERE session_id = ?";
 
@@ -31,14 +36,20 @@ public class PatientRepository {
             Long id = rs.getLong("symptom_id");
             LocalDateTime ts = rs.getTimestamp("time_stamp").toLocalDateTime();
             String[] symptomArray = (String[]) rs.getArray("symptom_set").getArray();
-            Set<SymptomType> set = new HashSet<>();
-            for (String s : symptomArray) {
-                set.add(SymptomType.valueOf(s));
+            Set<SymptomType> symptomsSet = new HashSet<>();
+            for (String symptom : symptomArray) {
+                symptomsSet.add(SymptomType.valueOf(symptom));
             }
-            return new Symptoms(id, sessionId, set, ts);
+            return new Symptoms(id, sessionId, symptomsSet, ts);
         }, sessionId);
     }
 
+    /**
+     * Finds and returns a patient by its unique identifier.
+     * @param patientId Database primary key of the patient.
+     * @return Patient object.
+     * @throws org.springframework.dao.EmptyResultDataAccessException if no patient exists.
+     */
     public Patient findById(Long patientId) {
         String sql = """
             SELECT patient_id, name, surname, selected_doctor_id, doctor_approval_status
@@ -58,6 +69,12 @@ public class PatientRepository {
         }, patientId);
     }
 
+    /**
+     * Assigns a doctor to a patient and marks the doctor approval status as PENDING.
+     * @param patientId ID of the patient who sent the request.
+     * @param doctorId  ID of the requested doctor.
+     * @return The doctor object that was assigned.
+     */
     public Doctor sendDoctorRequest(Long patientId, Long doctorId) {
         String sql = """
             UPDATE patients
@@ -83,6 +100,12 @@ public class PatientRepository {
                 ), doctorId);
     }
 
+    /**
+     * Creates a new measurement session for a patient.
+     * @param patientId ID of the patient starting the session.
+     * @return A MeasurementSession representing the new session.
+     * @throws IllegalStateException if the session ID cannot be retrieved (DB misconfiguration).
+     */
     public MeasurementSession startNewSession(Long patientId) {
         String sql = """
         INSERT INTO measurement_sessions (patient_id, time_stamp)
@@ -119,34 +142,13 @@ public class PatientRepository {
         return new MeasurementSession(sessionId, patientId, now, null, null);
     }
 
-    public Signal saveSignal(Long sessionId, Signal signal) {
-        String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
-        Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
-
-        if (patientId == null) {
-            throw new IllegalStateException("No patient found for sessionId: " + sessionId);
-        }
-
-        String sql = """
-            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data)
-            VALUES (?, ?, ?, ?, ?)
-            """;
-
-        LocalDateTime timestamp;
-        if (signal.getTimestamp() != null) {
-            timestamp = signal.getTimestamp();
-        } else {
-            timestamp = LocalDateTime.now();
-        }
-
-        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp),
-                signal.getSignalType().name(), signal.getPatientSignalData()
-        );
-
-        signal.setTimestamp(timestamp);
-        return signal;
-    }
-
+    /**
+     * Saves a new Symptoms record for the given session.
+     * @param sessionId The ID of the session to attach the symptoms to.
+     * @param symptoms  The symptoms object to store (timestamp is auto-filled if null).
+     * @return The same Symptoms instance with timestamp populated.
+     * @throws IllegalStateException if the session does not belong to any patient.
+     */
     public Symptoms saveSymptoms(Long sessionId, Symptoms symptoms) {
         String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
         Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
@@ -177,6 +179,46 @@ public class PatientRepository {
         return symptoms;
     }
 
+    /**
+     * Saves a basic (text-based) patient signal into the database.
+     * @param sessionId The session to attach the signal to.
+     * @param signal    The signal to store.
+     * @return The updated signal with timestamp set.
+     * @throws IllegalStateException if the session could not be matched to a patient.
+     */
+    public Signal saveSignal(Long sessionId, Signal signal) {
+        String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
+        Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
+
+        if (patientId == null) {
+            throw new IllegalStateException("No patient found for sessionId: " + sessionId);
+        }
+
+        String sql = """
+            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data)
+            VALUES (?, ?, ?, ?, ?)
+            """;
+
+        LocalDateTime timestamp;
+        if (signal.getTimestamp() != null) {
+            timestamp = signal.getTimestamp();
+        } else {
+            timestamp = LocalDateTime.now();
+        }
+
+        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp),
+                signal.getSignalType().name(), signal.getPatientSignalData()
+        );
+
+        signal.setTimestamp(timestamp);
+        return signal;
+    }
+
+    /**
+     * Retrieves all signals belonging to a session
+     * @param sessionId ID of the session.
+     * @return List of Signal ordered chronologically.
+     */
     public List<Signal> findSignalsBySessionId(Long sessionId) {
         String sql = """
             SELECT signal_id, session_id, patient_id, time_stamp, signal_type, patient_signal_data
@@ -195,6 +237,12 @@ public class PatientRepository {
         ), sessionId);
     }
 
+    /**
+     * Retrieves all symptoms belonging to a session.
+     *
+     * @param sessionId ID of the session.
+     * @return List of Symptoms.
+     */
     public List<Symptoms> findSymptomsBySessionId(Long sessionId) {
         String sql = """
             SELECT sy.symptom_id, sy.session_id, sy.symptom_set, sy.time_stamp
@@ -241,6 +289,7 @@ public class PatientRepository {
     }
 
     //! todo: by date
+
     /**
      * This method gets the measurement history (sessions) for a selected patient
      * @param sessionDate the patient id corresponding to the patient from who we want to see the historial as integer
@@ -262,7 +311,15 @@ public class PatientRepository {
         }, sessionDate);
     }
 
-
+    /**
+     * Reads an uploaded EMG file (expected format: first line = sampling rate,
+     * second line = raw data), validates it, and stores it in the database.
+     *
+     * @param fileBytes Raw file content.
+     * @param sessionId Session ID to attach the signal to.
+     * @return Saved {@link Signal} metadata.
+     * @throws IllegalStateException if the file is malformed or session is invalid.
+     */
     public Signal addEMG(byte[] fileBytes, Long sessionId) {
         String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
         Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
@@ -305,6 +362,15 @@ public class PatientRepository {
         return new Signal(patientId, sessionId, timestamp, SignalType.EMG, data, fs);
     }
 
+    /**
+     * Reads an uploaded ECG file (expected format: first line = sampling rate,
+     * second line = raw signal values), validates it, and stores it.
+     *
+     * @param fileBytes Raw file content.
+     * @param sessionId Session ID to attach the signal to.
+     * @return A {@link Signal} instance containing sampling rate & metadata.
+     * @throws IllegalStateException if file is empty or session invalid.
+     */
     public Signal addECG(byte[] fileBytes, Long sessionId) {
         String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
         Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
