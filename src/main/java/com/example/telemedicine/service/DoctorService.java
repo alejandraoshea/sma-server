@@ -3,7 +3,6 @@ package com.example.telemedicine.service;
 import com.example.telemedicine.domain.MeasurementSession;
 import com.example.telemedicine.domain.Patient;
 import com.example.telemedicine.domain.Doctor;
-import com.example.telemedicine.repository.MeasurementSessionRepository;
 import com.example.telemedicine.repository.PatientRepository;
 import org.springframework.stereotype.Service;
 import com.example.telemedicine.repository.DoctorRepository;
