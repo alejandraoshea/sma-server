@@ -1,3 +1,6 @@
+package com.example.telemedicine.signal;
+
+import com.example.telemedicine.signal.SignalUtils;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
