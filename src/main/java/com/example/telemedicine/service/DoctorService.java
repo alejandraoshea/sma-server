@@ -4,6 +4,7 @@ import com.example.telemedicine.domain.MeasurementSession;
 import com.example.telemedicine.domain.Patient;
 import com.example.telemedicine.domain.Doctor;
 import com.example.telemedicine.repository.MeasurementSessionRepository;
+import com.example.telemedicine.repository.PatientRepository;
 import org.springframework.stereotype.Service;
 import com.example.telemedicine.repository.DoctorRepository;
 
@@ -12,11 +13,11 @@ import java.util.List;
 @Service
 public class DoctorService {
     private final DoctorRepository doctorRepository;
-    private final MeasurementSessionRepository measurementSessionRepository;
+    private final PatientRepository patientRepository;
 
-    public DoctorService(DoctorRepository doctorRepository, MeasurementSessionRepository measurementSessionRepository) {
+    public DoctorService(DoctorRepository doctorRepository, PatientRepository patientRepository) {
         this.doctorRepository = doctorRepository;
-        this.measurementSessionRepository = measurementSessionRepository;
+        this.patientRepository = patientRepository;
     }
 
     public List<Patient> getPatientsOfDoctor(Long doctorId) {
@@ -24,7 +25,7 @@ public class DoctorService {
     }
 
     public List<MeasurementSession> getPatientSessions(Long patientId) {
-        return measurementSessionRepository.findSessionsByPatientId(patientId);
+        return patientRepository.findSessionsByPatientId(patientId);
     }
 
     public List<Doctor> getAllDoctors() {
@@ -46,4 +47,5 @@ public class DoctorService {
     public Doctor findDoctorById(Long doctorId){
         return doctorRepository.findDoctorById(doctorId);
     }
+
 }
