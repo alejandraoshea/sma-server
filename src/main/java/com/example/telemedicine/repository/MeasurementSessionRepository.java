@@ -229,6 +229,14 @@ public class MeasurementSessionRepository {
             throw new IllegalStateException("EMG signal file is empty");
         }
 
+        if (firstLine == null || firstLine.isBlank()) {
+            throw new IllegalStateException("Missing sampling rate (first line).");
+        }
+
+        if (data == null || data.isBlank()) {
+            throw new IllegalStateException("Missing data line (second line).");
+        }
+
         int fs = Integer.parseInt(firstLine.trim());
 
         //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
@@ -239,10 +247,9 @@ public class MeasurementSessionRepository {
             """;
 
         LocalDateTime timestamp = LocalDateTime.now();
-        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp), SignalType.EMG, data);
+        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp), SignalType.EMG, data, fs);
 
         return new Signal(patientId, sessionId, timestamp, SignalType.EMG, data, fs);
-
     }
 
     public Signal addECGToMeassurementSession(byte[] fileBytes, Long sessionId) {
@@ -264,6 +271,14 @@ public class MeasurementSessionRepository {
             throw new IllegalStateException("ECG signal file is empty");
         }
 
+        if (firstLine == null || firstLine.isBlank()) {
+            throw new IllegalStateException("Missing sampling rate (first line).");
+        }
+
+        if (data == null || data.isBlank()) {
+            throw new IllegalStateException("Missing data line (second line).");
+        }
+
         int fs = Integer.parseInt(firstLine.trim());
 
         //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
@@ -274,7 +289,7 @@ public class MeasurementSessionRepository {
             """;
 
         LocalDateTime timestamp = LocalDateTime.now();
-        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp), SignalType.ECG, data);
+        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp), SignalType.ECG, data, fs);
 
         return new Signal(patientId, sessionId, timestamp, SignalType.ECG, data, fs);
     }
