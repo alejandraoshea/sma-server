@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-//will be handling authentication: login, register and logout + interacts with AuthService and AuthRepo
 @RestController
 @RequestMapping("/api/authentication")
 public class AuthController {

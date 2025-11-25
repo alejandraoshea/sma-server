@@ -11,6 +11,10 @@ SPRING_PROFILE="local"
 
 USERNAME="${ADMIN_USERNAME}"
 PASSWORD="${ADMIN_PASSWORD}"
+
+USERNAME="a"
+PASSWORD="1"
+
 if [[ -z "$USERNAME" || -z "$PASSWORD" ]]; then
     echo "Error: ADMIN_USERNAME and ADMIN_PASSWORD environment variables are not set."
     exit 1

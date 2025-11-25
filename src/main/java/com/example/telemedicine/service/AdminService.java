@@ -1,8 +1,11 @@
 package com.example.telemedicine.service;
 
-import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
@@ -14,38 +17,28 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AdminService {
 
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private final String secretPassword;
     private int pid;
     @Getter
-    private Instant startTime;
+    private final Instant startTime = Instant.ofEpochMilli(
+            ManagementFactory.getRuntimeMXBean().getStartTime()
+    );
+    @Autowired
+    private ApplicationContext context;
 
-    @PostConstruct
-    public void markAsRunning() {
-        running.set(true);
-        startTime = Instant.now();
+    public AdminService(
+            @Value("${operator.password}") String secretPassword,
+            ApplicationContext context
+    ) {
+        this.secretPassword = secretPassword;
+        this.context = context;
     }
 
-    public synchronized void stop() {
-        if (!running.get()) return;
+    public void stop(String password) {
+        if (!password.equals(secretPassword)) return;
 
-        running.set(false);
-
-        try {
-            String scriptPath = "scripts/stop-server.sh";
-
-            ProcessBuilder pb = new ProcessBuilder(scriptPath);
-            pb.inheritIO();
-            Process process = pb.start();
-
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                System.out.println("Server stopped successfully via script, PID: " + pid);
-            } else {
-                System.err.println("Script exited with code: " + exitCode);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Failed to stop server via script, PID: " + pid);
-        }
+        System.out.println("Stopping server...");
+        SpringApplication.exit(context, () -> 0);
     }
 
     public boolean isRunning() {
@@ -53,7 +46,6 @@ public class AdminService {
     }
 
     public String getUptime() {
-        if (!running.get() || startTime == null) return "N/A";
         Duration duration = Duration.between(startTime, Instant.now());
         long hours = duration.toHours();
         long minutes = duration.toMinutesPart();
@@ -64,10 +56,6 @@ public class AdminService {
     public long getUsedMemory() {
         Runtime runtime = Runtime.getRuntime();
         return runtime.totalMemory() - runtime.freeMemory();
-    }
-
-    public long getFreeMemory() {
-        return Runtime.getRuntime().freeMemory();
     }
 
     public long getMaxMemory() {
