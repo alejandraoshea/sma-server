@@ -1,19 +1,40 @@
 package com.example.telemedicine.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-@EnableWebMvc
-public class WebConfig implements WebMvcConfigurer {
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")  // Apply CORS to API endpoints
-                .allowedOriginPatterns("https://localhost:5178")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true);
+public class WebConfig {
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOrigins(
+                                "http://localhost:3000",
+                                "http://127.0.0.1:3000",
+                                "http://127.0.0.1:5500",
+                                "http://localhost:5500",
+                                "http://127.0.0.1:5501",
+                                "http://localhost:5501",
+                                "https://localhost:3000",
+                                "https://127.0.0.1:3000",
+                                "https://127.0.0.1:5500",
+                                "https://localhost:5500",
+                                "https://127.0.0.1:5501",
+                                "https://localhost:5501",
+                                "https://127.0.0.1:8443",
+                                "https://localhost:8443",
+                                "https://127.0.0.1:5501"
+                        )
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
+            }
+        };
     }
 }

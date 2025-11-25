@@ -43,8 +43,11 @@ Thumbs.db
 .env
 application-*.yml
 application-*.properties
+application.yml
 *.yml
 
 .smarttomcat/
 *.iml
 .venv/
+
+src/main/resources/telemedicine.p12

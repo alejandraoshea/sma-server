@@ -1,10 +1,13 @@
 package com.example.telemedicine.domain;
 
+import lombok.Data;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
 //** recording session grouping multiple signals
+@Data
 public class MeasurementSession {
     private Long sessionId;
     private Long patientId;
