@@ -45,19 +45,18 @@ public class DoctorController {
         return doctorService.getAllDoctors();
     }
 
-    /*
+    @GetMapping("/{doctorId}/requests")
+    public List<Patient> getPendingRequests(@PathVariable Long doctorId){
+        return doctorService.getPendingRequests(doctorId);
+    }
+
     @PostMapping("/{doctorId}/approve/{patientId}")
     public Patient acceptPatientRequest(@PathVariable Long doctorId, @PathVariable Long patientId) {
-        return patientService.approvePatientRequest(patientId, doctorId);
+        return doctorService.approvePatientRequest(patientId, doctorId);
     }
 
     @PostMapping("/{doctorId}/reject/{patientId}")
-    public Patient rejectPatientRequest(
-            @PathVariable Long doctorId,
-            @PathVariable Long patientId) {
-        return patientService.rejectPatientRequest(patientId, doctorId);
+    public Patient rejectPatientRequest(@PathVariable Long doctorId, @PathVariable Long patientId) {
+        return doctorService.rejectPatientRequest(patientId, doctorId);
     }
-
-     */
-
 }

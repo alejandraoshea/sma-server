@@ -1,6 +1,6 @@
 package com.example.telemedicine.service;
 
-import com.zaxxer.hikari.HikariDataSource;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
 
@@ -10,8 +10,6 @@ import java.time.Instant;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.sun.management.OperatingSystemMXBean;
-
 @Service
 public class AdminService {
 
@@ -20,25 +18,38 @@ public class AdminService {
     @Getter
     private Instant startTime;
 
-    public synchronized void start() {
-        if (running.get()) return;
-
-        this.pid = ProcessHandle.current().pid() > Integer.MAX_VALUE ? -1 : (int) ProcessHandle.current().pid();
-        this.startTime = Instant.now();
+    @PostConstruct
+    public void markAsRunning() {
         running.set(true);
-
-        System.out.println("Server started, PID: " + pid);
+        startTime = Instant.now();
     }
 
     public synchronized void stop() {
         if (!running.get()) return;
 
         running.set(false);
-        System.out.println("Server stopped, PID: " + pid);
+
+        try {
+            String scriptPath = "scripts/stop-server.sh";
+
+            ProcessBuilder pb = new ProcessBuilder(scriptPath);
+            pb.inheritIO();
+            Process process = pb.start();
+
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                System.out.println("Server stopped successfully via script, PID: " + pid);
+            } else {
+                System.err.println("Script exited with code: " + exitCode);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Failed to stop server via script, PID: " + pid);
+        }
     }
 
     public boolean isRunning() {
-        return running.get();
+        return ManagementFactory.getRuntimeMXBean().getUptime() > 0;
     }
 
     public String getUptime() {
@@ -64,8 +75,12 @@ public class AdminService {
     }
 
     public double getCpuLoad() {
-        OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-        return osBean.getProcessCpuLoad() * 100;
+        java.lang.management.OperatingSystemMXBean baseOsBean = ManagementFactory.getOperatingSystemMXBean();
+        if (baseOsBean instanceof com.sun.management.OperatingSystemMXBean osBean) {
+            double load = osBean.getProcessCpuLoad();
+            return load < 0 ? 0 : load * 100;
+        }
+        return 0;
     }
 
     public int getThreadCount() {

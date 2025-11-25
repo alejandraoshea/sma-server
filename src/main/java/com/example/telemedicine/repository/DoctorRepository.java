@@ -1,10 +1,9 @@
 package com.example.telemedicine.repository;
 
 import com.example.telemedicine.domain.Gender;
-import com.example.telemedicine.domain.MeasurementSession;
-import com.example.telemedicine.domain.Gender;
 import com.example.telemedicine.domain.Patient;
 import com.example.telemedicine.domain.Doctor;
+import com.example.telemedicine.repository.mapper.PatientRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -18,35 +17,29 @@ public class DoctorRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+
     /**
-     * This method gets all the patients
-     * @param doctorId doctor id of the patient
-     * @return list of patients
+     * Find the patients of a doctor using the doctor ID
+     * @param doctorId the ID of the doctor
+     * @return a list of the doctor's patients
      */
     public List<Patient> findPatientsByDoctorId(Long doctorId) {
         String sql = """
-            SELECT patient_id, user_id, name, surname, gender, birth_date, height, weight
+            SELECT patient_id, user_id, name, surname, gender, birth_date,
+                   height, weight, sessions, doctor_id,
+                   selected_doctor_id, doctor_approval_status
             FROM patients
             WHERE doctor_id = ?
             ORDER BY name
         """;
 
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            Patient patient = new Patient(
-                    rs.getLong("patient_id"),
-                    rs.getLong("user_id"),
-                    rs.getString("name"),
-                    rs.getString("surname"),
-                    rs.getString("gender") != null ? Gender.valueOf(rs.getString("gender")) : null,
-                    rs.getDate("birth_date").toLocalDate(),
-                    rs.getLong("height"),
-                    rs.getDouble("weight"),
-                    null
-            );
-            return patient;
-        }, doctorId);
+        return jdbcTemplate.query(sql, new PatientRowMapper(), doctorId);
     }
 
+    /**
+     * Get list of all doctors
+     * @return a list of all the doctors in the BBDD
+     */
     public List<Doctor> getAllDoctors() {
         String sql = """
             SELECT doctor_id, user_id, name, surname, gender
@@ -54,16 +47,97 @@ public class DoctorRepository {
             ORDER BY name
         """;
 
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            Doctor doctor = new Doctor(
-                    rs.getLong("doctor_id"),
-                    rs.getLong("user_id"),
-                    rs.getString("name"),
-                    rs.getString("surname"),
-                    rs.getString("gender") != null ? Gender.valueOf(rs.getString("gender")) : null
-            );
-            return doctor;
-        });
+        return jdbcTemplate.query(sql, (rs, rowNum) ->
+                new Doctor(
+                        rs.getLong("doctor_id"),
+                        rs.getLong("user_id"),
+                        rs.getString("name"),
+                        rs.getString("surname"),
+                        rs.getString("gender") != null ? Gender.valueOf(rs.getString("gender")) : null
+                )
+        );
+    }
+
+    /**
+     * Get pending patient requests for doctor approval
+     * @param doctorId the id of the requested doctor
+     * @return a list of the patient's that requested that doctor
+     */
+    public List<Patient> getPendingRequests(Long doctorId) {
+        String sql = """
+                SELECT *
+                FROM patients
+                WHERE selected_doctor_id = ?
+                AND doctor_approval_status = 'PENDING'
+                """;
+
+        return jdbcTemplate.query(sql, new PatientRowMapper(), doctorId);
+    }
+
+
+    /**
+     * Approve a patient's doctor request
+     * @param patientId the id of the patient who requested a doctor
+     * @param doctorId the id of the doctor requested
+     * @return the patient approved by the doctor
+     */
+    public Patient approvePatientRequest(Long patientId, Long doctorId) {
+        String sql = """
+                UPDATE patients
+                SET doctor_approval_status = 'APPROVED',
+                    doctor_id = selected_doctor_id
+                WHERE patient_id = ? AND selected_doctor_id = ?
+                """;
+
+        jdbcTemplate.update(sql, patientId, doctorId);
+
+        return getPatient(patientId);
+    }
+
+    /**
+     * Reject a patient's doctor request
+     * @param patientId the id of the patient rejected
+     * @param doctorId the id of the doctor requested
+     * @return the patient rejected
+     */
+    public Patient rejectPatientRequest(Long patientId, Long doctorId) {
+        String sql = """
+                UPDATE patients
+                SET doctor_approval_status = 'REJECTED'
+                WHERE patient_id = ? AND selected_doctor_id = ?
+                """;
+
+        jdbcTemplate.update(sql, patientId, doctorId);
+
+        return getPatient(patientId);
+    }
+
+    /**
+     * Get patients approved for a doctor
+     * @param doctorId the id of the doctor to see all the patients approved by him
+     * @return the list of patients assigned to that doctor
+     */
+    public List<Patient> getApprovedPatients(Long doctorId) {
+        String sql = """
+                SELECT *
+                FROM patients
+                WHERE selected_doctor_id = ?
+                AND doctor_approval_status = 'APPROVED'
+                """;
+
+        return jdbcTemplate.query(sql, new PatientRowMapper(), doctorId);
+    }
+
+
+    /**
+     * Get a single patient by ID
+     * @param patientId the id of the patient
+     * @return the patient as a Patient
+     */
+    private Patient getPatient(Long patientId) {
+        String sql = "SELECT * FROM patients WHERE patient_id = ?";
+
+        return jdbcTemplate.queryForObject(sql, new PatientRowMapper(), patientId);
     }
 
 }

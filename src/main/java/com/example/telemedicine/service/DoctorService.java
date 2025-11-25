@@ -31,4 +31,16 @@ public class DoctorService {
         return doctorRepository.getAllDoctors();
     }
 
+    public Patient approvePatientRequest(Long patientId, Long doctorId) {
+        return doctorRepository.approvePatientRequest(patientId, doctorId);
+    }
+
+    public Patient rejectPatientRequest(Long patientId, Long doctorId) {
+        return doctorRepository.rejectPatientRequest(patientId, doctorId);
+    }
+
+    public List<Patient> getPendingRequests(Long doctorId) {
+        return doctorRepository.getPendingRequests(doctorId);
+    }
+
 }

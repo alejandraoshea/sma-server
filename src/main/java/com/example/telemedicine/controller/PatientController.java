@@ -27,14 +27,9 @@ public class PatientController {
         return measurementSessionService.getSessionsByPatient(patientId);
     }
 
-    /*
-    @PostMapping("/{patientId}/select-doctor/{doctorId}")
-    public Patient selectDoctorFromList(
-            @PathVariable Long patientId,
-            @PathVariable Long doctorId) {
-
+    @PostMapping("/{patientId}/request/{doctorId}")
+    public Doctor selectDoctorFromList(@PathVariable Long patientId, @PathVariable Long doctorId) {
         return patientService.selectDoctorFromList(patientId, doctorId);
     }
 
-     */
 }
