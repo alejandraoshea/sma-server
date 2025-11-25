@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/**
+ * REST controller that handles user authentication and registration endpoints.
+ */
 @RestController
 @RequestMapping("/api/authentication")
 public class AuthController {
@@ -17,11 +21,24 @@ public class AuthController {
     private final AuthService authService;
     private final JwtService jwtService;
 
+    /**
+     * Constructs an AuthController with the specified authentication and JWT services.
+     *
+     * @param authService the service responsible for user registration and login
+     * @param jwtService  the service responsible for generating JWT tokens
+     */
     public AuthController(AuthService authService, JwtService jwtService) {
         this.authService = authService;
         this.jwtService = jwtService;
     }
 
+
+    /**
+     * Registers a new user in the system.
+     *
+     * @param user the {@link User} object containing registration details
+     * @return a ResponseEntity containing success or error message
+     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
         try {
@@ -36,6 +53,12 @@ public class AuthController {
         }
     }
 
+    /**
+     * Logs in a user using their email and password.
+     *
+     * @param user the {@link User} object containing email and password
+     * @return a ResponseEntity containing JWT token, role, and message, or an error message
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user) {
         try {
