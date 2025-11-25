@@ -12,7 +12,7 @@ import java.util.List;
 
 
 @Service
-public class   MeasurementSessionService {
+public class MeasurementSessionService {
     private final MeasurementSessionRepository measurementSessionRepository;
 
     public MeasurementSessionService(MeasurementSessionRepository measurementSessionRepository) {
