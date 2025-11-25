@@ -30,7 +30,7 @@ public class PatientRepository {
      * @return List of Symptoms objects for that session. Empty list if none exist.
      */
     public List<Symptoms> findBySessionId(Long sessionId) {
-        String sql = "SELECT symptom_id, session_id, symptom_set, time_stamp FROM symptoms WHERE session_id = ?";
+        String sql = "SELECT symptom_id, session_id, symptom_set, time_stamp FROM measurement_session WHERE session_id = ?";
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             Long id = rs.getLong("symptom_id");
@@ -220,21 +220,17 @@ public class PatientRepository {
      * @return List of Signal ordered chronologically.
      */
     public List<Signal> findSignalsBySessionId(Long sessionId) {
-        String sql = """
-            SELECT signal_id, session_id, patient_id, time_stamp, signal_type, patient_data
-            FROM signals
-            WHERE session_id = ?
-            ORDER BY time_stamp
-            """;
-
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new Signal(
-                rs.getLong("signal_id"),
-                rs.getLong("session_id"),
-                rs.getTimestamp("time_stamp").toLocalDateTime(),
-                Enum.valueOf(com.example.telemedicine.domain.SignalType.class, rs.getString("signal_type")),
-                rs.getString("patient_data"),
-                rs.getInt("fs")
-        ), sessionId);
+        String sql = "SELECT signal_id, session_id, patient_id, time_stamp, patient_data, fs, signal_type FROM signals WHERE session_id = ? ORDER BY time_stamp";
+        return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) -> {
+            return new Signal(
+                    rs.getLong("signal_id"),
+                    rs.getLong("session_id"),
+                    rs.getTimestamp("time_stamp").toLocalDateTime(),
+                    SignalType.valueOf(rs.getString("signal_type")),
+                    rs.getString("patient_data"),
+                    rs.getInt("fs")
+            );
+        });
     }
 
     /**
@@ -243,27 +239,19 @@ public class PatientRepository {
      * @param sessionId ID of the session.
      * @return List of Symptoms.
      */
-    public List<Symptoms> findSymptomsBySessionId(Long sessionId) {
-        String sql = """
-            SELECT sy.symptom_id, sy.session_id, sy.symptom_set, sy.time_stamp
-            FROM symptoms sy
-            WHERE session_id = ?
-            ORDER BY time_stamp DESC
-        """;
-        //** if we want to order it we can add:  "ORDER BY timestamp DESC;"
+    public Set<SymptomType> findSymptomsBySessionId(Long sessionId) {
+        String sql = "SELECT symptoms FROM measurement_sessions WHERE session_id = ?";
 
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            Long symptomId = rs.getLong("symptom_id");
-            LocalDateTime ts = rs.getTimestamp("time_stamp").toLocalDateTime();
-
-            // convert PostgreSQL enum[] array → Set<SymptomType>
-            String[] symptomArray = (String[]) rs.getArray("symptom_set").getArray();
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            java.sql.Array symptomsArray = rs.getArray("symptoms");
             Set<SymptomType> symptomSet = new HashSet<>();
-            for (String s : symptomArray) {
-                symptomSet.add(SymptomType.valueOf(s));
+            if (symptomsArray != null) {
+                String[] symptomsDb = (String[]) symptomsArray.getArray();
+                for (String s : symptomsDb) {
+                    symptomSet.add(SymptomType.valueOf(s));
+                }
             }
-
-            return new Symptoms(symptomId, sessionId, symptomSet, ts);
+            return symptomSet;
         }, sessionId);
     }
 
@@ -274,7 +262,7 @@ public class PatientRepository {
      */
     public List<MeasurementSession> findSessionsByPatientId(Long patientId) {
         String sql = """
-            SELECT session_id, patient_id, time_stamp
+            SELECT session_id, patient_id, time_stamp, symptoms
             FROM measurement_sessions
             WHERE patient_id = ?
             ORDER BY time_stamp DESC
@@ -284,11 +272,20 @@ public class PatientRepository {
             Long sessionId = rs.getLong("session_id");
             Long pid = rs.getLong("patient_id");
             LocalDateTime timestamp = rs.getTimestamp("time_stamp").toLocalDateTime();
-            return new MeasurementSession(sessionId, pid, timestamp, null, null);
+
+            java.sql.Array symptomsArray = rs.getArray("symptoms");
+            Set<SymptomType> symptomSet = new HashSet<>();
+            if (symptomsArray != null) {
+                String[] symptomsDb = (String[]) symptomsArray.getArray();
+                for (String s : symptomsDb) {
+                    symptomSet.add(SymptomType.valueOf(s));
+                }
+            }
+
+            return new MeasurementSession(sessionId, pid, timestamp, symptomSet, null);
         }, patientId);
     }
 
-    //! todo: by date
 
     /**
      * Retrieves all measurement sessions that occurred on a specific date.

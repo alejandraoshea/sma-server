@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/patients")
@@ -103,7 +104,7 @@ public class PatientController {
      * @return list of symptoms
      */
     @GetMapping("/sessions/{sessionId}/symptoms")
-    public List<Symptoms> getSessionSymptoms(@PathVariable Long sessionId) {
+    public Set<SymptomType> getSessionSymptoms(@PathVariable Long sessionId) {
         return patientService.getSymptomsBySession(sessionId);
     }
 
