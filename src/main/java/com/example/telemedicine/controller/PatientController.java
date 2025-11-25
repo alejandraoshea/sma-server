@@ -1,9 +1,16 @@
 package com.example.telemedicine.controller;
 
 import com.example.telemedicine.domain.*;
+import com.example.telemedicine.repository.UserRepository;
+import com.example.telemedicine.security.JwtService;
 import com.example.telemedicine.service.PatientService;
+import io.jsonwebtoken.Claims;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -14,9 +21,13 @@ import java.util.Set;
 @RequestMapping("/api/patients")
 public class PatientController {
     private final PatientService patientService;
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public PatientController(PatientService patientService) {
+    public PatientController(PatientService patientService, JwtService jwtService, UserRepository userRepository) {
         this.patientService = patientService;
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     //** CRUD and see all sessions
@@ -38,8 +49,25 @@ public class PatientController {
      * @return patient object
      */
     @GetMapping("/{patientId}")
-    public Patient getPatient(@PathVariable Long patientId) {
-        return patientService.findById(patientId);
+    public ResponseEntity<?> getPatient(@PathVariable Long patientId,
+                                        @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        Claims claims = jwtService.extractClaims(token);
+        String email = claims.getSubject();
+
+        User user = userRepository.findByEmail(email);
+
+        if (user.getRole() != Role.PATIENT) {
+            return ResponseEntity.status(403).body("Forbidden");
+        }
+
+        Long actualPatientId = user.getPatient().getPatientId();
+        if (!actualPatientId.equals(patientId)) {
+            return ResponseEntity.status(403).body("You can only access your own data");
+        }
+
+        Patient patient = user.getPatient();
+        return ResponseEntity.ok(patient);
     }
 
     //**Session related endpoints

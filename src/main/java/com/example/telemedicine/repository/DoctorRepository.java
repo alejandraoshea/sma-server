@@ -13,39 +13,55 @@ import java.util.List;
 public class DoctorRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public DoctorRepository(JdbcTemplate jdbcTemplate){
+    public DoctorRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /**
+     * Finds the doctor ID associated with a given user ID.
+     *
+     * @param userId ID of the user
+     * @return The corresponding doctor ID, or null if not found
+     */
+    public Long findDoctorIdByUserId(Long userId) {
+        try {
+            String sql = "SELECT doctor_id FROM doctors WHERE user_id = ?";
+            return jdbcTemplate.queryForObject(sql, Long.class, userId);
+        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
 
     /**
      * Find the patients of a doctor using the doctor ID
+     *
      * @param doctorId the ID of the doctor
      * @return a list of the doctor's patients
      */
     public List<Patient> findPatientsByDoctorId(Long doctorId) {
         String sql = """
-            SELECT patient_id, user_id, name, surname, gender, birth_date,
-                   height, weight, sessions, doctor_id,
-                   selected_doctor_id, doctor_approval_status
-            FROM patients
-            WHERE doctor_id = ?
-            ORDER BY name
-        """;
+                    SELECT patient_id, user_id, name, surname, gender, birth_date,
+                           height, weight, sessions, doctor_id,
+                           selected_doctor_id, doctor_approval_status
+                    FROM patients
+                    WHERE doctor_id = ?
+                    ORDER BY name
+                """;
 
         return jdbcTemplate.query(sql, new PatientRowMapper(), doctorId);
     }
 
     /**
      * Get list of all doctors
+     *
      * @return a list of all the doctors in the BBDD
      */
     public List<Doctor> getAllDoctors() {
         String sql = """
-            SELECT doctor_id, user_id, name, surname, gender
-            FROM doctors
-            ORDER BY name
-        """;
+                    SELECT doctor_id, user_id, name, surname, gender
+                    FROM doctors
+                    ORDER BY name
+                """;
 
         return jdbcTemplate.query(sql, (rs, rowNum) ->
                 new Doctor(
@@ -60,6 +76,7 @@ public class DoctorRepository {
 
     /**
      * Get pending patient requests for doctor approval
+     *
      * @param doctorId the id of the requested doctor
      * @return a list of the patient's that requested that doctor
      */
@@ -77,8 +94,9 @@ public class DoctorRepository {
 
     /**
      * Approve a patient's doctor request
+     *
      * @param patientId the id of the patient who requested a doctor
-     * @param doctorId the id of the doctor requested
+     * @param doctorId  the id of the doctor requested
      * @return the patient approved by the doctor
      */
     public Patient approvePatientRequest(Long patientId, Long doctorId) {
@@ -96,8 +114,9 @@ public class DoctorRepository {
 
     /**
      * Reject a patient's doctor request
+     *
      * @param patientId the id of the patient rejected
-     * @param doctorId the id of the doctor requested
+     * @param doctorId  the id of the doctor requested
      * @return the patient rejected
      */
     public Patient rejectPatientRequest(Long patientId, Long doctorId) {
@@ -114,6 +133,7 @@ public class DoctorRepository {
 
     /**
      * Get patients approved for a doctor
+     *
      * @param doctorId the id of the doctor to see all the patients approved by him
      * @return the list of patients assigned to that doctor
      */
@@ -131,6 +151,7 @@ public class DoctorRepository {
 
     /**
      * Get a single patient by ID
+     *
      * @param patientId the id of the patient
      * @return the patient as a Patient
      */
@@ -140,12 +161,12 @@ public class DoctorRepository {
         return jdbcTemplate.queryForObject(sql, new PatientRowMapper(), patientId);
     }
 
-    public Doctor findDoctorById(Long doctorId){
+    public Doctor findDoctorById(Long doctorId) {
         String sql = """
-            SELECT doctor_id, name, surname, gender, specialization
-            FROM doctors
-            WHERE doctor_id = ?
-        """;
+                    SELECT doctor_id, name, surname, gender, specialization
+                    FROM doctors
+                    WHERE doctor_id = ?
+                """;
 
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
                 new Doctor(

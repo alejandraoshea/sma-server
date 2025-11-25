@@ -1,6 +1,7 @@
 package com.example.telemedicine.domain;
 
 import lombok.Data;
+import jakarta.persistence.Transient;
 
 import java.util.Objects;
 
@@ -10,6 +11,12 @@ public class User {
     private String email;
     private String password;
     private Role role;
+
+    @Transient
+    private Long patientId;
+
+    @Transient
+    private Long doctorId;
 
     public User() {
     }
@@ -41,13 +48,14 @@ public class User {
     }
 
     @Override
-    public String
-    toString() {
+    public String toString() {
         return "User{" +
                 "id=" + id +
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
                 ", role=" + role +
+                ", patientId=" + patientId +
+                ", doctorId=" + doctorId +
                 '}';
     }
 }

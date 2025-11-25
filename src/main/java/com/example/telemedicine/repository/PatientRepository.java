@@ -29,6 +29,21 @@ public class PatientRepository {
     }
 
     /**
+     * Finds the patient ID associated with a given user ID.
+     *
+     * @param userId ID of the user
+     * @return The corresponding patient ID, or null if not found
+     */
+    public Long findPatientIdByUserId(Long userId) {
+        try {
+            String sql = "SELECT patient_id FROM patients WHERE user_id = ?";
+            return jdbcTemplate.queryForObject(sql, Long.class, userId);
+        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
+    /**
      * Retrieves all symptoms recorded in a specific measurement session
      * @param sessionId ID of the session to query.
      * @return List of Symptoms objects for that session. Empty list if none exist.

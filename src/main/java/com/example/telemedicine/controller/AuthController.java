@@ -1,6 +1,9 @@
 package com.example.telemedicine.controller;
 
 import com.example.telemedicine.domain.User;
+import com.example.telemedicine.domain.Role;
+import com.example.telemedicine.repository.DoctorRepository;
+import com.example.telemedicine.repository.PatientRepository;
 import com.example.telemedicine.security.JwtService;
 import com.example.telemedicine.service.AuthService;
 
@@ -20,6 +23,8 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final PatientRepository patientRepository;
+    private final DoctorRepository doctorRepository;
 
     /**
      * Constructs an AuthController with the specified authentication and JWT services.
@@ -27,9 +32,12 @@ public class AuthController {
      * @param authService the service responsible for user registration and login
      * @param jwtService  the service responsible for generating JWT tokens
      */
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(AuthService authService, JwtService jwtService,
+                          PatientRepository patientRepository, DoctorRepository doctorRepository) {
         this.authService = authService;
         this.jwtService = jwtService;
+        this.patientRepository = patientRepository;
+        this.doctorRepository = doctorRepository;
     }
 
 
@@ -63,12 +71,24 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody User user) {
         try {
             User loggedInUser = authService.login(user.getEmail(), user.getPassword());
-            String token = jwtService.generateToken(user);
+
+            if (loggedInUser.getRole() == Role.PATIENT) {
+                Long patientId = patientRepository.findPatientIdByUserId(loggedInUser.getId());
+                loggedInUser.setPatientId(patientId);
+            } else if (loggedInUser.getRole() == Role.DOCTOR) {
+                Long doctorId = doctorRepository.findDoctorIdByUserId(loggedInUser.getId());
+                loggedInUser.setDoctorId(doctorId);
+            }
+
+            String token = jwtService.generateToken(loggedInUser);
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "User logged in successfully");
             response.put("role", loggedInUser.getRole());
             response.put("token", token);
+
+            if (loggedInUser.getPatientId() != null) response.put("patientId", loggedInUser.getPatientId());
+            if (loggedInUser.getDoctorId() != null) response.put("doctorId", loggedInUser.getDoctorId());
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
