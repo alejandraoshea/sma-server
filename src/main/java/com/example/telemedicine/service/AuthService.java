@@ -8,18 +8,38 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+
 import java.sql.PreparedStatement;
 
+/**
+ * Service for handling user authentication and registration.
+ * Provides methods for registering new users and logging in existing users.
+ * Handles password hashing using BCrypt and manages user roles.
+ */
 @Service
 public class AuthService {
 
     private final JdbcTemplate jdbcTemplate;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /**
+     * Constructs an AuthService with the provided JdbcTemplate.
+     *
+     * @param jdbcTemplate the JdbcTemplate for database access
+     */
     public AuthService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /**
+     * Registers a new user in the system.
+     * Inserts the user into the app_users table with a hashed password.
+     * Depending on the user's role, inserts a corresponding record into
+     * the patients or doctors table.
+     *
+     * @param user the User object containing email, password, and role
+     * @throws RuntimeException if an error occurs during database insertion
+     */
     public void register(User user) {
         try {
             String sql = "INSERT INTO public.app_users (email, password, role) VALUES (?, ?, ?)";
@@ -48,6 +68,15 @@ public class AuthService {
         }
     }
 
+    /**
+     * Authenticates a user by email and password.
+     * Retrieves the user from the database and verifies the password using BCrypt.
+     *
+     * @param email       the user's email
+     * @param rawPassword the user's raw password input
+     * @return the authenticated User object
+     * @throws RuntimeException if the user is not found or the password does not match
+     */
     public User login(String email, String rawPassword) {
         String sql = "SELECT * FROM public.app_users WHERE email = ?";
 
