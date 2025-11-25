@@ -20,9 +20,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/authentication/**").permitAll()
-                        .requestMatchers("/api/patients/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                        .requestMatchers("/api/patients/**").permitAll()
                         .requestMatchers("/api/sessions/**").permitAll()
-                        .requestMatchers("/api/doctors/**").hasAnyRole("DOCTOR", "ADMIN")
+                        .requestMatchers("/api/doctors/**").permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )

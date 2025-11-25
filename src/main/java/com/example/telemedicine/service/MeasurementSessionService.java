@@ -7,6 +7,7 @@ import com.example.telemedicine.repository.PatientRepository;
 import org.springframework.stereotype.Service;
 import com.example.telemedicine.repository.MeasurementSessionRepository;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -40,6 +41,14 @@ public class MeasurementSessionService {
 
     public List<MeasurementSession> getSessionsByPatient(Long patientId) {
         return measurementSessionRepository.findSessionsByPatientId(patientId);
+    }
+
+    public Signal addEMG(byte[] signal, Long sessionId) throws IOException {
+        return measurementSessionRepository.addEMG(signal, sessionId);
+    }
+
+    public Signal addECG(byte[] signal, Long sessionId) {
+        return measurementSessionRepository.addECG(signal, sessionId);
     }
 
 
