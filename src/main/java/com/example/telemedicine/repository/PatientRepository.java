@@ -226,7 +226,7 @@ public class PatientRepository {
 
         String sql = """
                 INSERT INTO signals (session_id, time_stamp, signal_type, patient_data)
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?::signal_type_enum, ?)
                 """;
 
         LocalDateTime timestamp;
@@ -403,7 +403,7 @@ public class PatientRepository {
 
         String sql = """
             INSERT INTO signals (session_id, time_stamp, signal_type, patient_data, fs)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?::signal_type_enum, ?, ?)
         """;
 
         LocalDateTime timestamp = LocalDateTime.now();
@@ -453,7 +453,7 @@ public class PatientRepository {
         String finalData = SignalProcessing.doubleArrayToString(filtered);
         String sql = """
             INSERT INTO signals (session_id, time_stamp, signal_type, patient_data, fs)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?::signal_type_enum, ?, ?)
         """;
 
         LocalDateTime timestamp = LocalDateTime.now();
