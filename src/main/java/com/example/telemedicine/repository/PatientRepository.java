@@ -476,7 +476,7 @@ public class PatientRepository {
 
     public void saveCsvSummaryFile(Long sessionId, byte[] csvBytes, String filename, String mimeType) {
         String sql = """
-        UPDATE measurement_sessions 
+        UPDATE measurement_sessions
         SET session_file = ?, session_filename = ?, session_mime_type = ? 
         WHERE session_id = ?
         """;
