@@ -418,24 +418,13 @@ public class PatientRepository {
 
         Signal parsed = SignalProcessing.parseSignalFile(fileBytes, SignalType.ECG, sessionId);
 
-        // --- Convert & Filter ---
         double[] raw = SignalProcessing.stringToDoubleArray(parsed.getPatientSignalData());
         double[] mvSignal = SignalProcessing.convertToMV(raw, 3.3, 10, 1100);
-
         double[] filtered = ECGProcessor.applyFilters(mvSignal, parsed.getFs());
 
-        // --- Detect QRS complexes ---
         QRSResult qrs = ECGProcessor.detectQRSComplexes(filtered, parsed.getFs());
 
-        // Optional chart
-        double[] time = new double[filtered.length];
-        for (int i = 0; i < filtered.length; i++) time[i] = i / (double) parsed.getFs();
-
-        ECGProcessor.plotECGResults(time, filtered, qrs.qPeaks, "ECG", 240);
-
-        // --- Save final filtered ECG ---
         String finalData = SignalProcessing.doubleArrayToString(filtered);
-
         String sql = """
             INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, fs)
             VALUES (?, ?, ?, ?, ?, ?)
