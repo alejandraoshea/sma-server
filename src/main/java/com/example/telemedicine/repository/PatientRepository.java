@@ -1,9 +1,7 @@
 package com.example.telemedicine.repository;
 
 import com.example.telemedicine.domain.*;
-import com.example.telemedicine.signal.ECGProcessor;
-import com.example.telemedicine.signal.EMGProcessor;
-import com.example.telemedicine.signal.SignalUtils;
+import com.example.telemedicine.signal.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -379,16 +377,16 @@ public class PatientRepository {
         int fs = Integer.parseInt(firstLine.trim());
 
         //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
-        double[] rawData = SignalUtils.stringToDoubleArray(data);
-        double[] signalMV = SignalUtils.convertToMV(rawData, 3.0, 10, 1000);
+        double[] rawData = SignalProcessing.stringToDoubleArray(data);
+        double[] signalMV = SignalProcessing.convertToMV(rawData, 3.0, 10, 1000);
         //FILTER
-        double[] passFilteredSignal = SignalUtils.bandpassFilter(signalMV, fs, 50, 300, 4);
-        double[] filteredSignal = SignalUtils.notchFilter(passFilteredSignal, fs, 60.0, 30);
+        double[] passFilteredSignal = SignalProcessing.bandpassFilter(signalMV, fs, 50, 300, 4);
+        double[] filteredSignal = SignalProcessing.notchFilter(passFilteredSignal, fs, 60.0, 30);
         //FOR SAVING
-        finalData = SignalUtils.doubleArrayToString(filteredSignal);
+        finalData = SignalProcessing.doubleArrayToString(filteredSignal);
 
         //FOR VISUALIZING
-        EMGProcessor.ContractionResult contractions = EMGProcessor.detectContractions(filteredSignal, fs, 0.165, 0.10);
+        ContractionResult contractions = EMGProcessor.detectContractions(filteredSignal, fs, 0.165, 0.10);
         EMGProcessor.plotEMGResults(fs, filteredSignal, contractions.envelope, contractions.onsets, contractions.offsets, String.valueOf(patientId));
 
         String sql = """
@@ -454,16 +452,16 @@ public class PatientRepository {
         int fs = Integer.parseInt(firstLine.trim());
 
         //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
-        double[] rawECG = SignalUtils.stringToDoubleArray(data);
-        double[] ecgSignal = SignalUtils.convertToMV(rawECG, 3.3, 10, 1100);
+        double[] rawECG = SignalProcessing.stringToDoubleArray(data);
+        double[] ecgSignal = SignalProcessing.convertToMV(rawECG, 3.3, 10, 1100);
 
         //FILTER
         double[] filteredECG = ECGProcessor.applyFilters(ecgSignal, fs);
         //FOR SAVING
-        finalData = SignalUtils.doubleArrayToString(filteredECG);
+        finalData = SignalProcessing.doubleArrayToString(filteredECG);
 
         //FOR VISUALIZING
-        ECGProcessor.QRSResult qrs = ECGProcessor.detectQRSComplexes(filteredECG, fs);
+        QRSResult qrs = ECGProcessor.detectQRSComplexes(filteredECG, fs);
         double[] time = new double[filteredECG.length];
         for (int i = 0; i < time.length; i++) {
             time[i] = i / fs;

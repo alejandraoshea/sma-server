@@ -17,37 +17,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-/**
- * Procesa una señal de EMG para detectar contracciones musculares.
- * Utiliza SignalUtils para las operaciones de filtrado genéricas.
- */
+
 public class EMGProcessor {
-
-    // --- CLASES DE RESULTADOS ---
-    public static class ContractionResult {
-        public final List<Integer> onsets;
-        public final List<Integer> offsets;
-        public final double[] envelope;
-
-        public ContractionResult(List<Integer> onsets, List<Integer> offsets, double[] envelope) {
-            this.onsets = onsets;
-            this.offsets = offsets;
-            this.envelope = envelope;
-        }
-    }
-
-    public static class RmsResult {
-        public final List<Double> rmsValues;
-        public final double medianRms;
-
-        public RmsResult(List<Double> rmsValues, double medianRms) {
-            this.rmsValues = rmsValues;
-            this.medianRms = medianRms;
-        }
-    }
-
-    // --- MÉTODOS PRIVADOS DE PROCESAMIENTO (Exclusivos de EMG) ---
-
     /**
      * Filtro de Mediana para suavizar la envolvente.
      * (Movido desde SignalUtils porque es específico de EMG)

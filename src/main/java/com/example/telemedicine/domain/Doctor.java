@@ -2,6 +2,8 @@ package com.example.telemedicine.domain;
 
 import lombok.Data;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 @Data
@@ -11,6 +13,16 @@ public class Doctor {
     private String name;
     private String surname;
     private Gender gender;
+    private List<Patient> patients;
+
+    public Doctor(Long doctorID, Long userId, String name, String lastName, Gender gender, List<Patient> patients) {
+        this.doctorId = doctorID;
+        this.userId = userId;
+        this.name = name;
+        this.surname = lastName;
+        this.gender = gender;
+        this.patients = patients;
+    }
 
     public Doctor(Long doctorID, Long userId, String name, String lastName, Gender gender) {
         this.doctorId = doctorID;
@@ -18,6 +30,7 @@ public class Doctor {
         this.name = name;
         this.surname = lastName;
         this.gender = gender;
+        this.patients = new LinkedList<>();
     }
 
     public Doctor(Long doctorID, String name, String lastName, Gender gender) {
@@ -32,12 +45,12 @@ public class Doctor {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Doctor doctor = (Doctor) o;
-        return Objects.equals(doctorId, doctor.doctorId) && Objects.equals(userId, doctor.userId) && Objects.equals(name, doctor.name) && Objects.equals(surname, doctor.surname) && gender == doctor.gender;
+        return Objects.equals(doctorId, doctor.doctorId) && Objects.equals(userId, doctor.userId) && Objects.equals(name, doctor.name) && Objects.equals(surname, doctor.surname) && gender == doctor.gender && Objects.equals(patients, doctor.patients);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(doctorId, userId, name, surname, gender);
+        return Objects.hash(doctorId, userId, name, surname, gender, patients);
     }
 
     @Override
@@ -48,6 +61,7 @@ public class Doctor {
                 ", name='" + name + '\'' +
                 ", surname='" + surname + '\'' +
                 ", gender=" + gender +
+                ", patients=" + patients +
                 '}';
     }
 }

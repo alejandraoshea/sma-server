@@ -1,54 +1,39 @@
 package com.example.telemedicine.signal;
+import com.example.telemedicine.domain.Signal;
+import com.example.telemedicine.domain.SignalType;
 import uk.me.berndporr.iirj.Butterworth; // Tu librería de filtros
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
-/**
- * CAJA DE HERRAMIENTAS (Utilidades Estáticas)
- * Responsabilidad: Parsear archivos, convertir formatos y aplicar matemáticas (filtros).
- * No accede a Base de Datos.
- */
-public class SignalUtils {
 
-    // --- 1. CLASE AUXILIAR PARA TRANSPORTAR DATOS ---
-    public static class PatientSignals {
-        public final int fs;
-        public final String dataString;
-
-        public PatientSignals(int fs, String dataString) {
-            this.fs = fs;
-            this.dataString = dataString;
-        }
-
-
-    }
-
-    // --- 2. MÉTODOS DE LECTURA DE ARCHIVOS ---
+public class SignalProcessing {
 
     /**
      * PARA EL SERVIDOR (Spring Boot):
      * Lee los bytes del archivo subido (MultipartFile).
      */
-    public static PatientSignals parseSignalFile(byte[] fileBytes) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fileBytes)))) {
-            return readFromReader(reader);
+    public static Signal parseSignalFile(byte[] fileBytes, SignalType type, Long measurementSessionId) {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new ByteArrayInputStream(fileBytes)))) {
+
+            return parseFromReader(reader, type, measurementSessionId);
         } catch (IOException e) {
-            throw new RuntimeException("Error al leer los bytes del archivo.", e);
+            throw new RuntimeException("Error reading uploaded signal file.", e);
         }
     }
 
-    /**
-     * PARA PRUEBAS LOCALES:
-     * Lee un archivo del disco duro.
-     */
-    public static PatientSignals readAndParseFile(String filePath) throws IOException {
+    public static Signal parseLocalSignalFile(String filePath, SignalType type,
+                                              Long measurementSessionId) throws IOException {
+
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            return readFromReader(reader);
+            return parseFromReader(reader, type, measurementSessionId);
         }
     }
 
-    private static PatientSignals readFromReader(BufferedReader reader) throws IOException {
+
+    private static Signal parseFromReader(BufferedReader reader, SignalType type, Long measurementSessionId) throws IOException {
         String firstLine = reader.readLine(); // Línea 1: Frecuencia
         String data = reader.readLine();      // Línea 2: Datos
 
@@ -59,12 +44,14 @@ public class SignalUtils {
             throw new IllegalArgumentException("El archivo no tiene datos (Línea 2 vacía).");
         }
 
+        int fs;
         try {
-            int fs = Integer.parseInt(firstLine.trim());
-            return new PatientSignals(fs, data);
+            fs = Integer.parseInt(firstLine.trim());
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("La primera línea no es un número válido (Frecuencia).");
+            throw new IllegalArgumentException("Invalid sampling frequency in line 1.");
         }
+
+        return new Signal(null, measurementSessionId, LocalDateTime.now(), type, data, fs);
     }
 
     // --- 3. CONVERSORES DE DATOS ---
