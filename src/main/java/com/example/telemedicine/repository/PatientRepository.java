@@ -320,6 +320,33 @@ public class PatientRepository {
         }, patientId);
     }
 
+    /**
+     * Retrieves a measurement session by its id
+     * @param sessionId The id of the session
+     * @return Measurement Session
+     */
+    public MeasurementSession findSessionsById(Long sessionId) {
+        String sql = """
+                SELECT patient_id, time_stamp, symptoms
+                FROM measurement_sessions
+                WHERE session_id = ?
+                ORDER BY time_stamp DESC
+                """;
+
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            Long pid = rs.getLong("patient_id");
+            LocalDateTime timestamp = rs.getTimestamp("time_stamp").toLocalDateTime();
+            java.sql.Array symptomsArray = rs.getArray("symptoms");
+            Set<SymptomType> symptomSet = new HashSet<>();
+            if (symptomsArray != null) {
+                String[] symptomsDb = (String[]) symptomsArray.getArray();
+                for (String s : symptomsDb) {
+                    symptomSet.add(SymptomType.valueOf(s));
+                }
+            }
+            return new MeasurementSession(sessionId, pid, timestamp, symptomSet);
+        }, sessionId);
+    }
 
     /**
      * Retrieves all measurement sessions that occurred on a specific date.

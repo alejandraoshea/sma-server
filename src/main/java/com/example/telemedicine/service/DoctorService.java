@@ -1,22 +1,25 @@
 package com.example.telemedicine.service;
 
-import com.example.telemedicine.domain.MeasurementSession;
-import com.example.telemedicine.domain.Patient;
-import com.example.telemedicine.domain.Doctor;
+import com.example.telemedicine.domain.*;
+import com.example.telemedicine.exceptions.PdfGeneratorException;
 import com.example.telemedicine.repository.PatientRepository;
 import org.springframework.stereotype.Service;
 import com.example.telemedicine.repository.DoctorRepository;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class DoctorService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
+    private final PdfGenerator pdfGenerator;
 
-    public DoctorService(DoctorRepository doctorRepository, PatientRepository patientRepository) {
+    public DoctorService(DoctorRepository doctorRepository, PatientRepository patientRepository, PdfGenerator pdfGenerator) {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
+        this.pdfGenerator = pdfGenerator;
     }
 
     public List<Patient> getPatientsOfDoctor(Long doctorId) {
@@ -46,5 +49,31 @@ public class DoctorService {
     public Doctor findDoctorById(Long doctorId){
         return doctorRepository.findDoctorById(doctorId);
     }
+
+    public Report generateReport(Long doctorId, Long sessionId) {
+        MeasurementSession session = patientRepository.findSessionsById(sessionId);
+        Patient patient = patientRepository.findById(session.getPatientId());
+        Set<SymptomType> symptoms = patientRepository.findSymptomsBySessionId(sessionId);
+        List<Signal> signals = patientRepository.findSignalsBySessionId(sessionId);
+
+        byte[] pdfBytes = new byte[0];
+        try {
+            pdfBytes = pdfGenerator.generateSessionPDF(patient, session, symptoms, signals);
+        } catch (PdfGeneratorException e) {
+            throw new RuntimeException(e);
+        }
+
+        Report report = new Report(patient.getPatientId(), doctorId, sessionId, pdfBytes,
+                "session_" + sessionId + "_report.pdf", "application/pdf"
+        );
+
+        return doctorRepository.saveReport(report);
+    }
+
+    /** Fetch stored report PDF */
+    public Report getReport(Long reportId) {
+        return doctorRepository.findReportById(reportId);
+    }
+
 
 }
