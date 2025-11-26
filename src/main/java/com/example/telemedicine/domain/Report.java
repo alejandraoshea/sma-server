@@ -8,20 +8,29 @@ import java.util.Objects;
 
 @Data
 public class Report {
-
     private Long reportId;
-    private Long patient_id;
-    private Long doctor_id;
-    private Long session_id;
+    private Long patientId;
+    private Long doctorId;
+    private Long sessionId;
     private byte[] fileData;
     private String fileName;
     private String fileType;
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    public Report(Long patient_id, Long doctor_id, Long session_id, byte[] fileData, String fileName, String fileType) {
-        this.patient_id = patient_id;
-        this.doctor_id = doctor_id;
-        this.session_id = session_id;
+    public Report(Long reportId, Long patientId, Long doctorId, Long sessionId, byte[] fileData, String fileName, String fileType) {
+        this.reportId = reportId;
+        this.patientId = patientId;
+        this.doctorId = doctorId;
+        this.sessionId = sessionId;
+        this.fileData = fileData;
+        this.fileName = fileName;
+        this.fileType = fileType;
+    }
+
+    public Report(Long patientId, Long doctorId, Long sessionId, byte[] fileData, String fileName, String fileType) {
+        this.patientId = patientId;;
+        this.doctorId = doctorId;;
+        this.sessionId = sessionId;;
         this.fileData = fileData;
         this.fileName = fileName;
         this.fileType = fileType;
@@ -32,12 +41,12 @@ public class Report {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Report report = (Report) o;
-        return Objects.equals(reportId, report.reportId) && Objects.equals(patient_id, report.patient_id) && Objects.equals(doctor_id, report.doctor_id) && Objects.equals(session_id, report.session_id) && Arrays.equals(fileData, report.fileData) && Objects.equals(fileName, report.fileName) && Objects.equals(fileType, report.fileType) && Objects.equals(createdAt, report.createdAt);
+        return Objects.equals(reportId, report.reportId) && Objects.equals(patientId, report.patientId) && Objects.equals(doctorId, report.doctorId) && Objects.equals(sessionId, report.sessionId) && Arrays.equals(fileData, report.fileData) && Objects.equals(fileName, report.fileName) && Objects.equals(fileType, report.fileType) && Objects.equals(createdAt, report.createdAt);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(reportId, patient_id, doctor_id, session_id, fileName, fileType, createdAt);
+        int result = Objects.hash(reportId, patientId, doctorId, sessionId, fileName, fileType, createdAt);
         result = 31 * result + Arrays.hashCode(fileData);
         return result;
     }
@@ -46,9 +55,9 @@ public class Report {
     public String toString() {
         return "Report{" +
                 "reportId=" + reportId +
-                ", patient_id=" + patient_id +
-                ", doctor_id=" + doctor_id +
-                ", session_id=" + session_id +
+                ", patientId=" + patientId +
+                ", doctorId=" + doctorId +
+                ", sessionId=" + sessionId +
                 ", fileData=" + Arrays.toString(fileData) +
                 ", fileName='" + fileName + '\'' +
                 ", fileType='" + fileType + '\'' +

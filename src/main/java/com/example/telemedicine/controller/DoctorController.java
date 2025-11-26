@@ -2,7 +2,10 @@ package com.example.telemedicine.controller;
 
 import com.example.telemedicine.domain.MeasurementSession;
 import com.example.telemedicine.domain.Patient;
+import com.example.telemedicine.domain.Report;
 import com.example.telemedicine.service.PatientService;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -94,5 +97,21 @@ public class DoctorController {
     public Patient rejectPatientRequest(@PathVariable Long doctorId, @PathVariable Long patientId) {
         return doctorService.rejectPatientRequest(patientId, doctorId);
     }
+
+    @PostMapping("/{doctorId}/report/{sessionId}/generate")
+    public Report generateReport(@PathVariable Long doctorId, @PathVariable Long sessionId) {
+        return doctorService.generateReport(doctorId, sessionId);
+    }
+
+    @GetMapping("/reports/{reportId}")
+    public ResponseEntity<byte[]> getReport(@PathVariable Long reportId) {
+        Report report = doctorService.getReport(reportId);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"" + report.getFileName() + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(report.getFileData());
+    }
+
 
 }
