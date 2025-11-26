@@ -355,62 +355,40 @@ public class PatientRepository {
             throw new IllegalStateException("No patient found for sessionId: " + sessionId);
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fileBytes)));
+        Signal parsed = SignalProcessing.parseSignalFile(fileBytes, SignalType.EMG, sessionId);
 
-        String firstLine;
-        String data;
-        String finalData;
+        double[] raw = SignalProcessing.stringToDoubleArray(parsed.getPatientSignalData());
+        double[] mv = SignalProcessing.convertToMV(raw, 3.0, 10, 1000);
 
-        try {
-            firstLine = reader.readLine();
-            data = reader.readLine();
-        } catch (IOException e) {
-            throw new IllegalStateException("EMG signal file is empty");
-        }
+        double[] bandpassed = SignalProcessing.bandpassFilter(mv, parsed.getFs(), 50, 300, 4);
+        double[] finalFiltered = SignalProcessing.notchFilter(bandpassed, parsed.getFs(), 60, 30);
 
-        if (firstLine == null || firstLine.isBlank())
-            throw new IllegalStateException("Missing sampling rate (first line).");
+        ContractionResult cr = EMGProcessor.detectContractions(finalFiltered, parsed.getFs(), 0.165, 0.10);
 
-        if (data == null || data.isBlank())
-            throw new IllegalStateException("Missing data line (second line).");
-
-        int fs = Integer.parseInt(firstLine.trim());
-
-        //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
-        double[] rawData = SignalProcessing.stringToDoubleArray(data);
-        double[] signalMV = SignalProcessing.convertToMV(rawData, 3.0, 10, 1000);
-        //FILTER
-        double[] passFilteredSignal = SignalProcessing.bandpassFilter(signalMV, fs, 50, 300, 4);
-        double[] filteredSignal = SignalProcessing.notchFilter(passFilteredSignal, fs, 60.0, 30);
-        //FOR SAVING
-        finalData = SignalProcessing.doubleArrayToString(filteredSignal);
-
-        //FOR VISUALIZING
-        ContractionResult contractions = EMGProcessor.detectContractions(filteredSignal, fs, 0.165, 0.10);
-        EMGProcessor.plotEMGResults(fs, filteredSignal, contractions.envelope, contractions.onsets, contractions.offsets, String.valueOf(patientId));
+        String finalData = SignalProcessing.doubleArrayToString(finalFiltered);
 
         String sql = """
-                INSERT INTO signals (patient_id, session_id, time_stamp, patient_data, fs)
-                VALUES (?, ?, ?, ?, ?)
-                """;
+            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, fs)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """;
 
         LocalDateTime timestamp = LocalDateTime.now();
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
+        KeyHolder key = new GeneratedKeyHolder();
 
         jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setLong(1, patientId);
             ps.setLong(2, sessionId);
             ps.setTimestamp(3, Timestamp.valueOf(timestamp));
-            ps.setString(4, finalData);
-            ps.setInt(5, fs);
+            ps.setString(4, SignalType.EMG.name());
+            ps.setString(5, finalData);
+            ps.setInt(6, parsed.getFs());
             return ps;
-        }, keyHolder);
+        }, key);
 
-        Long signalId = ((Number) keyHolder.getKeys().get("signal_id")).longValue();
+        Long signalId = ((Number) key.getKeys().get("signal_id")).longValue();
 
-        return new Signal(signalId, sessionId, timestamp, SignalType.EMG, data, fs);
+        return new Signal(signalId, sessionId, timestamp, SignalType.EMG, finalData, parsed.getFs());
     }
 
 
@@ -431,48 +409,30 @@ public class PatientRepository {
             throw new IllegalStateException("No patient found for sessionId: " + sessionId);
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fileBytes)));
+        Signal parsed = SignalProcessing.parseSignalFile(fileBytes, SignalType.ECG, sessionId);
 
-        String firstLine;
-        String data;
-        String finalData;
-        try {
-            firstLine = reader.readLine();
-            data = reader.readLine();
-        } catch (IOException e) {
-            throw new IllegalStateException("ECG signal file is empty");
-        }
+        // --- Convert & Filter ---
+        double[] raw = SignalProcessing.stringToDoubleArray(parsed.getPatientSignalData());
+        double[] mvSignal = SignalProcessing.convertToMV(raw, 3.3, 10, 1100);
 
-        if (firstLine == null || firstLine.isBlank())
-            throw new IllegalStateException("Missing sampling rate (first line).");
+        double[] filtered = ECGProcessor.applyFilters(mvSignal, parsed.getFs());
 
-        if (data == null || data.isBlank())
-            throw new IllegalStateException("Missing data line (second line).");
+        // --- Detect QRS complexes ---
+        QRSResult qrs = ECGProcessor.detectQRSComplexes(filtered, parsed.getFs());
 
-        int fs = Integer.parseInt(firstLine.trim());
+        // Optional chart
+        double[] time = new double[filtered.length];
+        for (int i = 0; i < filtered.length; i++) time[i] = i / (double) parsed.getFs();
 
-        //TODO PROCESAMIENTO DE SEÑAL AQUI (de data)
-        double[] rawECG = SignalProcessing.stringToDoubleArray(data);
-        double[] ecgSignal = SignalProcessing.convertToMV(rawECG, 3.3, 10, 1100);
+        ECGProcessor.plotECGResults(time, filtered, qrs.qPeaks, "ECG", 240);
 
-        //FILTER
-        double[] filteredECG = ECGProcessor.applyFilters(ecgSignal, fs);
-        //FOR SAVING
-        finalData = SignalProcessing.doubleArrayToString(filteredECG);
-
-        //FOR VISUALIZING
-        QRSResult qrs = ECGProcessor.detectQRSComplexes(filteredECG, fs);
-        double[] time = new double[filteredECG.length];
-        for (int i = 0; i < time.length; i++) {
-            time[i] = i / fs;
-        }
-        ECGProcessor.plotECGResults(time, filteredECG, qrs.qPeaks, "Análisis ECG (Simulación Servidor)", 240);
-        //------------------------------------------------------------------------------------------------------------------------------
+        // --- Save final filtered ECG ---
+        String finalData = SignalProcessing.doubleArrayToString(filtered);
 
         String sql = """
-                INSERT INTO signals (patient_id, session_id, time_stamp, patient_data, fs)
-                VALUES (?, ?, ?, ?, ?)
-                """;
+            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, fs)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """;
 
         LocalDateTime timestamp = LocalDateTime.now();
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -482,14 +442,15 @@ public class PatientRepository {
             ps.setLong(1, patientId);
             ps.setLong(2, sessionId);
             ps.setTimestamp(3, Timestamp.valueOf(timestamp));
-            ps.setString(4, finalData);
-            ps.setInt(5, fs);
+            ps.setString(4, SignalType.ECG.name());
+            ps.setString(5, finalData);
+            ps.setInt(6, parsed.getFs());
             return ps;
         }, keyHolder);
 
         Long signalId = ((Number) keyHolder.getKeys().get("signal_id")).longValue();
 
-        return new Signal(signalId, sessionId, timestamp, SignalType.ECG, data, fs);
+        return new Signal(signalId, sessionId, timestamp, SignalType.ECG, finalData, parsed.getFs());
     }
 
 
