@@ -58,7 +58,7 @@ public class PatientController {
      */
     @GetMapping("/me")
     public ResponseEntity<?> getPatient(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.substring(7); // remove "Bearer "
+        String token = authHeader.substring(7);
         Claims claims = jwtService.extractClaims(token);
 
         if (!claims.get("role").equals(Role.PATIENT.name())) {

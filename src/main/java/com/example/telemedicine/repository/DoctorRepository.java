@@ -163,7 +163,7 @@ public class DoctorRepository {
 
     public Doctor findDoctorById(Long doctorId) {
         String sql = """
-                    SELECT doctor_id, name, surname, gender, specialization
+                    SELECT doctor_id, name, surname, gender
                     FROM doctors
                     WHERE doctor_id = ?
                 """;
