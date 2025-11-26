@@ -43,7 +43,6 @@ public class AdminController {
         return operatorConfig.getPassword().equals(opPass);
     }
 
-
     /**
      * Stops the server if the provided password is correct.
      *
