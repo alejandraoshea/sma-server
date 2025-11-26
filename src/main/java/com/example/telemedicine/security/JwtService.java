@@ -2,6 +2,7 @@ package com.example.telemedicine.security;
 
 import com.example.telemedicine.domain.User;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -50,13 +51,23 @@ public class JwtService {
      * @return A signed JWT token as a {@link String}
      */
     public String generateToken(User user) {
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .setSubject(user.getEmail())
                 .claim("role", user.getRole())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(getSignKey())
-                .compact();
+                .signWith(getSignKey());
+
+        switch (user.getRole()) {
+            case PATIENT:
+                builder.claim("patientId", user.getPatientId());
+                break;
+            case DOCTOR:
+                builder.claim("doctorId", user.getDoctorId());
+                break;
+        }
+
+        return builder.compact();
     }
 
     /**

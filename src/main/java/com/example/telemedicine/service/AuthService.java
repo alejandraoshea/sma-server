@@ -83,7 +83,6 @@ public class AuthService {
         User user;
         try {
             user = jdbcTemplate.queryForObject(sql, new UserRowMapper(), email);
-
         } catch (org.springframework.dao.EmptyResultDataAccessException e) {
             throw new RuntimeException("Invalid login: user not found");
         } catch (Exception e) {
@@ -95,7 +94,16 @@ public class AuthService {
             throw new RuntimeException("Invalid email or password");
         }
 
+        if (user.getRole() == Role.PATIENT) {
+            String patientSql = "SELECT patient_id FROM patients WHERE user_id = ?";
+            Long patientId = jdbcTemplate.queryForObject(patientSql, Long.class, user.getId());
+            user.setPatientId(patientId);
+        } else if (user.getRole() == Role.DOCTOR) {
+            String doctorSql = "SELECT doctor_id FROM doctors WHERE user_id = ?";
+            Long doctorId = jdbcTemplate.queryForObject(doctorSql, Long.class, user.getId());
+            user.setDoctorId(doctorId);
+        }
+
         return user;
     }
-
 }

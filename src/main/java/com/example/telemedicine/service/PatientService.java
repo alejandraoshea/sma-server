@@ -21,8 +21,9 @@ public class PatientService {
 
     /**
      * Submits a request for a patient to select a doctor
+     *
      * @param patientId ID of the patient
-     * @param doctorId ID of the doctor
+     * @param doctorId  ID of the doctor
      * @return the doctor selected
      */
     public Doctor selectDoctorFromList(Long patientId, Long doctorId) {
@@ -30,7 +31,22 @@ public class PatientService {
     }
 
     /**
+     * Updates patient's personal information according to form
+     *
+     * @param patientId
+     * @param newData
+     * @return
+     */
+    public Patient updatePatientInfo(Long patientId, Patient newData) {
+        int updated = patientRepository.updatePatientInfo(patientId, newData);
+        if (updated == 0) throw new RuntimeException("Patient not found");
+
+        return patientRepository.findById(patientId);
+    }
+
+    /**
      * Retrieves a patient by ID, including their selected doctor if assigned
+     *
      * @param patientId ID of the patient
      * @return patient object
      */
@@ -46,6 +62,7 @@ public class PatientService {
 
     /**
      * Starts a new measurement session for a patient
+     *
      * @param patientId ID of the patient starting the session
      * @return newly created measurement session
      */
@@ -55,8 +72,9 @@ public class PatientService {
 
     /**
      * Stores a signal for a given session
+     *
      * @param sessionId ID of the session
-     * @param signal the signal data
+     * @param signal    the signal data
      * @return saved signal
      */
     public Signal uploadSignal(Long sessionId, Signal signal) {
@@ -65,8 +83,9 @@ public class PatientService {
 
     /**
      * Stores symptoms for a given session
+     *
      * @param sessionId ID of the session
-     * @param symptoms the symptoms data
+     * @param symptoms  the symptoms data
      * @return saved symptoms object
      */
     public Set<SymptomType> uploadSymptoms(Long sessionId, Set<SymptomType> symptoms) {
@@ -75,6 +94,7 @@ public class PatientService {
 
     /**
      * Retrieves all signals from a given session
+     *
      * @param sessionId ID of the session
      * @return list of signals
      */
@@ -84,6 +104,7 @@ public class PatientService {
 
     /**
      * Retrieves all symptoms from a given session
+     *
      * @param sessionId ID of the session
      * @return list of symptoms
      */
@@ -93,6 +114,7 @@ public class PatientService {
 
     /**
      * Retrieves all measurement sessions for a given patient
+     *
      * @param patientId ID of the patient
      * @return list of measurement sessions
      */
@@ -102,7 +124,8 @@ public class PatientService {
 
     /**
      * Uploads an EMG signal file for the session
-     * @param signal raw binary file content
+     *
+     * @param signal    raw binary file content
      * @param sessionId ID of the session
      * @return saved EMG signal
      * @throws IOException if processing fails
