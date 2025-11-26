@@ -6,6 +6,8 @@ import com.example.telemedicine.repository.UserRepository;
 import com.example.telemedicine.security.JwtService;
 import com.example.telemedicine.service.PatientService;
 import io.jsonwebtoken.Claims;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -221,5 +223,28 @@ public class PatientController {
     @PostMapping(value = "/sessions/{sessionId}/emg", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public Signal receiveEMG(@PathVariable("sessionId") Long sessionId, @RequestBody byte[] fileBytes) throws IOException {
         return patientService.addEMG(fileBytes, sessionId);
+    }
+
+    @PostMapping("/sessions/{sessionId}/generate-summary")
+    public ResponseEntity<String> generateSummary(@PathVariable Long sessionId) {
+        try {
+            patientService.generateAndSaveCsvSummary(sessionId);
+            return ResponseEntity.ok("CSV summary generated and saved successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/sessions/{sessionId}/summary-file")
+    public ResponseEntity<byte[]> downloadSummaryFile(@PathVariable Long sessionId) {
+        byte[] csvBytes = patientService.getCsvSummaryFile(sessionId);
+        if (csvBytes == null || csvBytes.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"session_" + sessionId + "_summary.csv\"")
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(csvBytes);
     }
 }

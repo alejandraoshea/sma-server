@@ -254,17 +254,17 @@ public class PatientRepository {
      */
     public List<Signal> findSignalsBySessionId(Long sessionId) {
         String sql = "SELECT signal_id, session_id, time_stamp, patient_data, fs, signal_type FROM signals WHERE session_id = ? ORDER BY time_stamp";
-        return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) -> {
-            return new Signal(
+        return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) ->
+             new Signal(
                     rs.getLong("signal_id"),
                     rs.getLong("session_id"),
                     rs.getTimestamp("time_stamp").toLocalDateTime(),
                     SignalType.valueOf(rs.getString("signal_type")),
                     rs.getString("patient_data"),
                     rs.getInt("fs")
-            );
-        });
+             ));
     }
+
 
     /**
      * Retrieves all symptoms recorded in a specific measurement session
@@ -402,8 +402,8 @@ public class PatientRepository {
         String finalData = SignalProcessing.doubleArrayToString(finalFiltered);
 
         String sql = """
-            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, fs)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO signals (session_id, time_stamp, signal_type, patient_data, fs)
+            VALUES (?, ?, ?, ?, ?)
         """;
 
         LocalDateTime timestamp = LocalDateTime.now();
@@ -411,12 +411,11 @@ public class PatientRepository {
 
         jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, patientId);
-            ps.setLong(2, sessionId);
-            ps.setTimestamp(3, Timestamp.valueOf(timestamp));
-            ps.setString(4, SignalType.EMG.name());
-            ps.setString(5, finalData);
-            ps.setInt(6, parsed.getFs());
+            ps.setLong(1, sessionId);
+            ps.setTimestamp(2, Timestamp.valueOf(timestamp));
+            ps.setString(3, SignalType.ECG.name());
+            ps.setString(4, finalData);
+            ps.setInt(5, parsed.getFs());
             return ps;
         }, key);
 
@@ -453,8 +452,8 @@ public class PatientRepository {
 
         String finalData = SignalProcessing.doubleArrayToString(filtered);
         String sql = """
-            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, fs)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO signals (session_id, time_stamp, signal_type, patient_data, fs)
+            VALUES (?, ?, ?, ?, ?)
         """;
 
         LocalDateTime timestamp = LocalDateTime.now();
@@ -462,18 +461,30 @@ public class PatientRepository {
 
         jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, patientId);
-            ps.setLong(2, sessionId);
-            ps.setTimestamp(3, Timestamp.valueOf(timestamp));
-            ps.setString(4, SignalType.ECG.name());
-            ps.setString(5, finalData);
-            ps.setInt(6, parsed.getFs());
+            ps.setLong(1, sessionId);
+            ps.setTimestamp(2, Timestamp.valueOf(timestamp));
+            ps.setString(3, SignalType.ECG.name());
+            ps.setString(4, finalData);
+            ps.setInt(5, parsed.getFs());
             return ps;
         }, keyHolder);
 
         Long signalId = ((Number) keyHolder.getKeys().get("signal_id")).longValue();
 
         return new Signal(signalId, sessionId, timestamp, SignalType.ECG, finalData, parsed.getFs());
+    }
+
+    public void saveCsvSummaryFile(Long sessionId, byte[] csvBytes) {
+        String sql = "UPDATE measurement_sessions SET session_file = ? WHERE session_id = ?";
+        jdbcTemplate.update(sql, csvBytes, sessionId);
+    }
+
+    public byte[] getCsvSummaryFile(Long sessionId) {
+        String sql ="SELECT session_file FROM measurement_sessions WHERE session_id = ?";
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            byte[] csvFromDB = rs.getBytes("session_file");
+            return csvFromDB;
+        }, sessionId);
     }
 
 }

@@ -46,7 +46,7 @@ public class DoctorRepository {
     public List<Patient> findPatientsByDoctorId(Long doctorId) {
         String sql = """
                     SELECT patient_id, user_id, name, surname, gender, birth_date,
-                           height, weight, sessions, doctor_id,
+                           height, weight, doctor_id,
                            selected_doctor_id, doctor_approval_status
                     FROM patients
                     WHERE doctor_id = ?

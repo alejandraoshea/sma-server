@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import com.example.telemedicine.repository.PatientRepository;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 
@@ -136,6 +137,54 @@ public class PatientService {
 
     public Signal addECG(byte[] signal, Long sessionId) {
         return patientRepository.addECG(signal, sessionId);
+    }
+
+    public void generateAndSaveCsvSummary(Long sessionId) {
+        MeasurementSession session = patientRepository.findSessionsById(sessionId);
+        if (session == null) throw new IllegalArgumentException("Session not found");
+
+        Patient patient = patientRepository.findById(session.getPatientId());
+        if (patient == null) throw new IllegalArgumentException("Patient not found");
+
+        List<Signal> signals = patientRepository.findSignalsBySessionId(sessionId);
+
+        StringBuilder csv = new StringBuilder();
+
+        // Patient info
+        csv.append("Patient Info\n");
+        csv.append("Name,Surname,Gender,BirthDate,Height,Weight\n");
+        csv.append(String.format("%s,%s,%s,%s,%d,%.2f\n",
+                patient.getName(),
+                patient.getSurname(),
+                patient.getGender() != null ? patient.getGender().name() : "",
+                patient.getBirthDate() != null ? patient.getBirthDate().toString() : "",
+                patient.getHeight() != null ? patient.getHeight() : 0,
+                patient.getWeight()
+        ));
+        csv.append("\n");
+
+        // Signals (ECG and EMG)
+        for (Signal signal : signals) {
+            if (signal.getSignalType() == SignalType.ECG || signal.getSignalType() == SignalType.EMG) {
+                csv.append(signal.getSignalType().name()).append(" Signal\n");
+                csv.append("SignalId,Timestamp,Fs,Data\n");
+                csv.append(String.format("%d,%s,%d,\"%s\"\n",
+                        signal.getId(),
+                        signal.getTimestamp() != null ? signal.getTimestamp().toString() : "",
+                        signal.getFs(),
+                        signal.getPatientSignalData().replace("\n", " ").replace("\"", "\"\"")
+                ));
+                csv.append("\n");
+            }
+        }
+
+        byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
+
+        patientRepository.saveCsvSummaryFile(sessionId, csvBytes);
+    }
+
+    public byte[] getCsvSummaryFile(Long sessionId) {
+        return patientRepository.getCsvSummaryFile(sessionId);
     }
 
 }
