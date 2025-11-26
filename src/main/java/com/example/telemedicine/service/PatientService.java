@@ -35,13 +35,12 @@ public class PatientService {
      *
      * @param patientId
      * @param newData
-     * @return
      */
-    public Patient updatePatientInfo(Long patientId, Patient newData) {
+    public void updatePatientInfo(Long patientId, Patient newData) {
         int updated = patientRepository.updatePatientInfo(patientId, newData);
         if (updated == 0) throw new RuntimeException("Patient not found");
 
-        return patientRepository.findById(patientId);
+        patientRepository.findById(patientId);
     }
 
     /**
@@ -57,6 +56,7 @@ public class PatientService {
             Doctor d = doctorRepository.findDoctorById(p.getSelectedDoctorId());
             p.setSelectedDoctorId(d.getDoctorId());
         }
+
         return p;
     }
 

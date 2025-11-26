@@ -104,19 +104,26 @@ public class PatientRepository {
      */
     public Patient findById(Long patientId) {
         String sql = """
-                    SELECT patient_id, name, surname, selected_doctor_id, doctor_approval_status
+                    SELECT *
                     FROM patients
                     WHERE patient_id = ?
                 """;
 
+
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
             Patient p = new Patient();
             p.setPatientId(rs.getLong("patient_id"));
+            p.setUserId(rs.getLong("user_id"));
             p.setName(rs.getString("name"));
             p.setSurname(rs.getString("surname"));
-            p.setSelectedDoctorId(rs.getObject("selected_doctor_id") != null ?
-                    rs.getLong("selected_doctor_id") : null);
-            p.setDoctorApprovalStatus(DoctorApprovalStatus.valueOf(rs.getString("doctor_approval_status")));
+            p.setGender(rs.getString("gender") != null ? Gender.valueOf(rs.getString("gender")) : null);
+            p.setBirthDate(rs.getDate("birth_date") != null ? rs.getDate("birth_date").toLocalDate() : null);
+            p.setHeight(Long.valueOf(rs.getObject("height") != null ? rs.getInt("height") : 0));
+            p.setWeight(rs.getObject("weight") != null ? rs.getInt("weight") : 0);
+            p.setDoctorId(rs.getObject("doctor_id") != null ? rs.getLong("doctor_id") : null);
+            p.setSelectedDoctorId(rs.getObject("selected_doctor_id") != null ? rs.getLong("selected_doctor_id") : null);
+            p.setDoctorApprovalStatus(rs.getString("doctor_approval_status") != null ?
+                    DoctorApprovalStatus.valueOf(rs.getString("doctor_approval_status")) : null);
             return p;
         }, patientId);
     }
@@ -512,6 +519,5 @@ public class PatientRepository {
 
         return new Signal(signalId, sessionId, timestamp, SignalType.ECG, data, fs);
     }
-
 
 }

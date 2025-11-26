@@ -94,7 +94,10 @@ public class PatientController {
         System.out.println("PatientData: " + patientData);
 
         try {
-            Patient updatedPatient = patientService.updatePatientInfo(patientId, patientData);
+            patientService.updatePatientInfo(patientId, patientData);
+
+            Patient updatedPatient = patientService.findById(patientId);
+
             return ResponseEntity.ok(updatedPatient);
         } catch (Exception e) {
             e.printStackTrace();
