@@ -1,43 +1,74 @@
 package com.example.telemedicine.integration;
 
+import com.example.telemedicine.domain.Patient;
+import com.example.telemedicine.security.JwtService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.StreamUtils;
+import org.springframework.test.web.servlet.MvcResult;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class measurementSession {
+public class PatientEndpointsTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private String loadJson(String path) throws IOException {
-        Resource resource = new ClassPathResource(path);
-        return StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private JwtService jwtService;
+
+    @Test
+    void getPatientById_returnsPatient() throws Exception {
+        // Mock the JwtService to return Claims with patientId and role
+        Claims mockClaims = Mockito.mock(Claims.class);
+        Mockito.when(mockClaims.get("patientId", Long.class)).thenReturn(1L);
+        Mockito.when(mockClaims.get("role")).thenReturn("PATIENT");
+        Mockito.when(jwtService.extractClaims(Mockito.anyString())).thenReturn(mockClaims);
+
+        MvcResult result = mockMvc.perform(get("/api/patients/me")
+                        .header("Authorization", "Bearer dummy-token")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Patient patient = objectMapper.readValue(jsonResponse, Patient.class);
+        assertThat(patient.getPatientId()).isEqualTo(1L);
+        assertThat(patient.getName()).isNotBlank();
     }
 
     @Test
-    void testMeasurementSessionStartSessionEndpoint1() throws Exception {
-        String requestJson = loadJson("json/measurementSession/measurementSession_request1.json");
-        String expectedResponse = loadJson("json/measurementSession/measurementSession_response1.json");
+    void updatePatientInfo_updatesSuccessfully() throws Exception {
+        Claims mockClaims = Mockito.mock(Claims.class);
+        Mockito.when(mockClaims.get("patientId", Long.class)).thenReturn(1L);
+        Mockito.when(mockClaims.get("role")).thenReturn("PATIENT");
+        Mockito.when(jwtService.extractClaims(Mockito.anyString())).thenReturn(mockClaims);
 
-        mockMvc.perform(post("/api/sessions/start/1")
+        Patient update = new Patient();
+        update.setName("NewName");
+
+        String jsonRequest = objectMapper.writeValueAsString(update);
+
+        mockMvc.perform(post("/api/patients/me")
+                        .header("Authorization", "Bearer dummy-token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .content(jsonRequest))
                 .andExpect(status().isOk())
-                .andExpect(content().json(expectedResponse, JsonCompareMode.LENIENT));
+                .andExpect(jsonPath("$.name").value("NewName"));
     }
 }
