@@ -225,17 +225,20 @@ public class PatientController {
         return patientService.addEMG(fileBytes, sessionId);
     }
 
-    @PostMapping("/sessions/{sessionId}/generate-summary")
+    @PostMapping("/sessions/{sessionId}/generate-session-file")
     public ResponseEntity<String> generateSummary(@PathVariable Long sessionId) {
         try {
             patientService.generateAndSaveCsvSummary(sessionId);
             return ResponseEntity.ok("CSV summary generated and saved successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+            // log error here if you have logging
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error: " + e.getMessage());
         }
     }
 
-    @GetMapping("/sessions/{sessionId}/summary-file")
+    @GetMapping("/sessions/{sessionId}/session-file")
     public ResponseEntity<byte[]> downloadSummaryFile(@PathVariable Long sessionId) {
         byte[] csvBytes = patientService.getCsvSummaryFile(sessionId);
         if (csvBytes == null || csvBytes.length == 0) {
@@ -243,7 +246,7 @@ public class PatientController {
         }
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"session_" + sessionId + "_summary.csv\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"session_" + sessionId + "_file.csv\"")
                 .contentType(MediaType.TEXT_PLAIN)
                 .body(csvBytes);
     }

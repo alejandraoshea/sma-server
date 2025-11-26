@@ -474,17 +474,20 @@ public class PatientRepository {
         return new Signal(signalId, sessionId, timestamp, SignalType.ECG, finalData, parsed.getFs());
     }
 
-    public void saveCsvSummaryFile(Long sessionId, byte[] csvBytes) {
-        String sql = "UPDATE measurement_sessions SET session_file = ? WHERE session_id = ?";
-        jdbcTemplate.update(sql, csvBytes, sessionId);
+    public void saveCsvSummaryFile(Long sessionId, byte[] csvBytes, String filename, String mimeType) {
+        String sql = """
+        UPDATE measurement_sessions 
+        SET session_file = ?, session_filename = ?, session_mime_type = ? 
+        WHERE session_id = ?
+        """;
+        jdbcTemplate.update(sql, csvBytes, filename, mimeType, sessionId);
     }
 
     public byte[] getCsvSummaryFile(Long sessionId) {
-        String sql ="SELECT session_file FROM measurement_sessions WHERE session_id = ?";
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-            byte[] csvFromDB = rs.getBytes("session_file");
-            return csvFromDB;
-        }, sessionId);
+        String sql = "SELECT session_file FROM measurement_sessions WHERE session_id = ?";
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
+                rs.getBytes("session_file"),
+                sessionId);
     }
 
 }

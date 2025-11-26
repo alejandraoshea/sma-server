@@ -150,7 +150,6 @@ public class PatientService {
 
         StringBuilder csv = new StringBuilder();
 
-        // Patient info
         csv.append("Patient Info\n");
         csv.append("Name,Surname,Gender,BirthDate,Height,Weight\n");
         csv.append(String.format("%s,%s,%s,%s,%d,%.2f\n",
@@ -163,7 +162,6 @@ public class PatientService {
         ));
         csv.append("\n");
 
-        // Signals (ECG and EMG)
         for (Signal signal : signals) {
             if (signal.getSignalType() == SignalType.ECG || signal.getSignalType() == SignalType.EMG) {
                 csv.append(signal.getSignalType().name()).append(" Signal\n");
@@ -180,11 +178,17 @@ public class PatientService {
 
         byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
 
-        patientRepository.saveCsvSummaryFile(sessionId, csvBytes);
+        patientRepository.saveCsvSummaryFile(sessionId, csvBytes, "session_" + sessionId + "_file.csv", "text/csv");
     }
 
     public byte[] getCsvSummaryFile(Long sessionId) {
         return patientRepository.getCsvSummaryFile(sessionId);
+    }
+
+    private String escapeCsv(String input) {
+        if (input == null) return "";
+        String escaped = input.replace("\"", "\"\"").replace("\n", " ").replace("\r", " ");
+        return escaped;
     }
 
 }
