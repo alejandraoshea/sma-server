@@ -24,7 +24,7 @@ import java.util.*;
 public class PatientRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public PatientRepository(JdbcTemplate jdbcTemplate){
+    public PatientRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -44,7 +44,39 @@ public class PatientRepository {
     }
 
     /**
+     * Updates patient's personal information in the database using SQL.
+     *
+     * @param patientId ID of the patient to update
+     * @param newData   Patient object containing new data (null fields are ignored)
+     * @return number of rows updated (should be 1 if successful)
+     */
+    public int updatePatientInfo(Long patientId, Patient newData) {
+        String sql = """
+                    UPDATE patients
+                    SET
+                        name = COALESCE(?, name),
+                        surname = COALESCE(?, surname),
+                        gender = COALESCE(?::gender_enum, gender),
+                        birth_date = COALESCE(?, birth_date),
+                        height = COALESCE(?, height),
+                        weight = COALESCE(?, weight)
+                    WHERE patient_id = ?
+                """;
+
+        return jdbcTemplate.update(sql,
+                newData.getName(),
+                newData.getSurname(),
+                newData.getGender() != null ? newData.getGender().name() : null,
+                newData.getBirthDate() != null ? java.sql.Date.valueOf(newData.getBirthDate()) : null,
+                newData.getHeight(),
+                newData.getWeight(),
+                patientId
+        );
+    }
+
+    /**
      * Retrieves all symptoms recorded in a specific measurement session
+     *
      * @param sessionId ID of the session to query.
      * @return List of Symptoms objects for that session. Empty list if none exist.
      */
@@ -65,16 +97,17 @@ public class PatientRepository {
 
     /**
      * Finds and returns a patient by its unique identifier.
+     *
      * @param patientId Database primary key of the patient.
      * @return Patient object.
      * @throws org.springframework.dao.EmptyResultDataAccessException if no patient exists.
      */
     public Patient findById(Long patientId) {
         String sql = """
-            SELECT patient_id, name, surname, selected_doctor_id, doctor_approval_status
-            FROM patients
-            WHERE patient_id = ?
-        """;
+                    SELECT patient_id, name, surname, selected_doctor_id, doctor_approval_status
+                    FROM patients
+                    WHERE patient_id = ?
+                """;
 
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
             Patient p = new Patient();
@@ -90,25 +123,26 @@ public class PatientRepository {
 
     /**
      * Assigns a doctor to a patient and marks the doctor approval status as PENDING.
+     *
      * @param patientId ID of the patient who sent the request.
      * @param doctorId  ID of the requested doctor.
      * @return The doctor object that was assigned.
      */
     public Doctor sendDoctorRequest(Long patientId, Long doctorId) {
         String sql = """
-            UPDATE patients
-            SET selected_doctor_id = ?, doctor_approval_status = 'PENDING'
-            WHERE patient_id = ?
-        """;
+                    UPDATE patients
+                    SET selected_doctor_id = ?, doctor_approval_status = 'PENDING'
+                    WHERE patient_id = ?
+                """;
 
         jdbcTemplate.update(sql, doctorId, patientId);
 
         // return doctor object
         String docSql = """
-            SELECT doctor_id, name, surname, gender
-            FROM doctors
-            WHERE doctor_id = ?
-        """;
+                    SELECT doctor_id, name, surname, gender
+                    FROM doctors
+                    WHERE doctor_id = ?
+                """;
 
         return jdbcTemplate.queryForObject(docSql, (rs, rowNum) ->
                 new Doctor(
@@ -121,15 +155,16 @@ public class PatientRepository {
 
     /**
      * Creates a new measurement session for a patient.
+     *
      * @param patientId ID of the patient starting the session.
      * @return A MeasurementSession representing the new session.
      * @throws IllegalStateException if the session ID cannot be retrieved (DB misconfiguration).
      */
     public MeasurementSession startNewSession(Long patientId) {
         String sql = """
-        INSERT INTO measurement_sessions (patient_id, time_stamp)
-        VALUES (?, ?)
-        """;
+                INSERT INTO measurement_sessions (patient_id, time_stamp)
+                VALUES (?, ?)
+                """;
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         LocalDateTime now = LocalDateTime.now();
@@ -170,15 +205,15 @@ public class PatientRepository {
      * @throws IllegalArgumentException if symptoms or its set is null.
      */
     public Set<SymptomType> saveSymptoms(Long sessionId, Set<SymptomType> symptoms) {
-        if (symptoms == null){
+        if (symptoms == null) {
             throw new IllegalArgumentException("Symptoms set cannot be null.");
         }
 
         String sql = """
-            UPDATE measurement_sessions
-            SET symptoms = ?::symptoms_enum[]
-            WHERE session_id = ?
-            """;
+                UPDATE measurement_sessions
+                SET symptoms = ?::symptoms_enum[]
+                WHERE session_id = ?
+                """;
 
         String[] symptomArray = symptoms.stream()
                 .map(Enum::name)
@@ -191,6 +226,7 @@ public class PatientRepository {
 
     /**
      * Saves a basic (text-based) patient signal into the database.
+     *
      * @param sessionId The session to attach the signal to.
      * @param signal    The signal to store.
      * @return The updated signal with timestamp set.
@@ -205,9 +241,9 @@ public class PatientRepository {
         }
 
         String sql = """
-            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data)
-            VALUES (?, ?, ?, ?, ?)
-            """;
+                INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data)
+                VALUES (?, ?, ?, ?, ?)
+                """;
 
         LocalDateTime timestamp;
         if (signal.getTimestamp() != null) {
@@ -226,6 +262,7 @@ public class PatientRepository {
 
     /**
      * Retrieves all signals belonging to a session
+     *
      * @param sessionId ID of the session.
      * @return List of Signal ordered chronologically.
      */
@@ -267,16 +304,17 @@ public class PatientRepository {
 
     /**
      * This method gets the measurement history (sessions) for a selected patient
+     *
      * @param patientId the patient id corresponding to the patient from who we want to see the historial as integer
      * @return the measurement session of the patient as list
      */
     public List<MeasurementSession> findSessionsByPatientId(Long patientId) {
         String sql = """
-            SELECT session_id, patient_id, time_stamp, symptoms
-            FROM measurement_sessions
-            WHERE patient_id = ?
-            ORDER BY time_stamp DESC
-        """;
+                    SELECT session_id, patient_id, time_stamp, symptoms
+                    FROM measurement_sessions
+                    WHERE patient_id = ?
+                    ORDER BY time_stamp DESC
+                """;
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             Long sessionId = rs.getLong("session_id");
@@ -305,11 +343,11 @@ public class PatientRepository {
      */
     public List<MeasurementSession> findSessionsByDate(LocalDateTime sessionDate) {
         String sql = """
-        SELECT session_id, patient_id, time_stamp
-        FROM measurement_sessions
-        WHERE DATE(time_stamp) = DATE(?)
-        ORDER BY time_stamp DESC
-        """;
+                SELECT session_id, patient_id, time_stamp
+                FROM measurement_sessions
+                WHERE DATE(time_stamp) = DATE(?)
+                ORDER BY time_stamp DESC
+                """;
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             Long sessionId = rs.getLong("session_id");
@@ -373,9 +411,9 @@ public class PatientRepository {
         EMGProcessor.plotEMGResults(fs, filteredSignal, contractions.envelope, contractions.onsets, contractions.offsets, String.valueOf(patientId));
 
         String sql = """
-        INSERT INTO signals (patient_id, session_id, time_stamp, patient_data, fs)
-        VALUES (?, ?, ?, ?, ?)
-        """;
+                INSERT INTO signals (patient_id, session_id, time_stamp, patient_data, fs)
+                VALUES (?, ?, ?, ?, ?)
+                """;
 
         LocalDateTime timestamp = LocalDateTime.now();
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -453,9 +491,9 @@ public class PatientRepository {
         //------------------------------------------------------------------------------------------------------------------------------
 
         String sql = """
-        INSERT INTO signals (patient_id, session_id, time_stamp, patient_data, fs)
-        VALUES (?, ?, ?, ?, ?)
-        """;
+                INSERT INTO signals (patient_id, session_id, time_stamp, patient_data, fs)
+                VALUES (?, ?, ?, ?, ?)
+                """;
 
         LocalDateTime timestamp = LocalDateTime.now();
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -474,7 +512,6 @@ public class PatientRepository {
 
         return new Signal(signalId, sessionId, timestamp, SignalType.ECG, data, fs);
     }
-
 
 
 }

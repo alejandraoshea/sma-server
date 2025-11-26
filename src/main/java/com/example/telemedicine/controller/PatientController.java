@@ -39,7 +39,7 @@ public class PatientController {
     /**
      * Submits a request for a patient to connect with a doctor
      *
-     * @param doctorId  ID of doctor
+     * @param doctorId ID of doctor
      * @return doctor object confirming submission
      */
     @PostMapping("/request/{doctorId}")
@@ -69,6 +69,37 @@ public class PatientController {
         Patient patient = patientRepository.findById(patientId);
 
         return ResponseEntity.ok(patient);
+    }
+
+    /**
+     * Updates the patient's profile information
+     *
+     * @param patientData Patient object containing updated fields
+     * @return updated Patient
+     */
+    @PostMapping("/me")
+    public ResponseEntity<?> updatePatient(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody Patient patientData
+    ) {
+        String token = authHeader.substring(7);
+        Claims claims = jwtService.extractClaims(token);
+
+        if (!claims.get("role").equals(Role.PATIENT.name())) {
+            return ResponseEntity.status(403).body("Forbidden");
+        }
+
+        Long patientId = claims.get("patientId", Long.class);
+        System.out.println("PatientId: " + patientId);
+        System.out.println("PatientData: " + patientData);
+
+        try {
+            Patient updatedPatient = patientService.updatePatientInfo(patientId, patientData);
+            return ResponseEntity.ok(updatedPatient);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Failed to update patient");
+        }
     }
 
     //**Session related endpoints
