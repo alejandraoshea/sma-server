@@ -225,8 +225,8 @@ public class PatientRepository {
         }
 
         String sql = """
-                INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO signals (session_id, time_stamp, signal_type, patient_data)
+                VALUES (?, ?, ?, ?)
                 """;
 
         LocalDateTime timestamp;
@@ -236,7 +236,7 @@ public class PatientRepository {
             timestamp = LocalDateTime.now();
         }
 
-        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp),
+        jdbcTemplate.update(sql, sessionId, Timestamp.valueOf(timestamp),
                 signal.getSignalType().name(), signal.getPatientSignalData()
         );
 
