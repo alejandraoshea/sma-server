@@ -75,27 +75,6 @@ public class PatientRepository {
     }
 
     /**
-     * Retrieves all symptoms recorded in a specific measurement session
-     *
-     * @param sessionId ID of the session to query.
-     * @return List of Symptoms objects for that session. Empty list if none exist.
-     */
-    public List<Symptoms> findBySessionId(Long sessionId) {
-        String sql = "SELECT symptom_id, session_id, symptom_set, time_stamp FROM measurement_session WHERE session_id = ?";
-
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            Long id = rs.getLong("symptom_id");
-            LocalDateTime ts = rs.getTimestamp("time_stamp").toLocalDateTime();
-            String[] symptomArray = (String[]) rs.getArray("symptom_set").getArray();
-            Set<SymptomType> symptomsSet = new HashSet<>();
-            for (String symptom : symptomArray) {
-                symptomsSet.add(SymptomType.valueOf(symptom));
-            }
-            return new Symptoms(id, sessionId, symptomsSet, ts);
-        }, sessionId);
-    }
-
-    /**
      * Finds and returns a patient by its unique identifier.
      *
      * @param patientId Database primary key of the patient.
@@ -267,6 +246,8 @@ public class PatientRepository {
         return signal;
     }
 
+
+
     /**
      * Retrieves all signals belonging to a session
      *
@@ -274,7 +255,7 @@ public class PatientRepository {
      * @return List of Signal ordered chronologically.
      */
     public List<Signal> findSignalsBySessionId(Long sessionId) {
-        String sql = "SELECT signal_id, session_id, patient_id, time_stamp, patient_data, fs, signal_type FROM signals WHERE session_id = ? ORDER BY time_stamp";
+        String sql = "SELECT signal_id, session_id, time_stamp, patient_data, fs, signal_type FROM signals WHERE session_id = ? ORDER BY time_stamp";
         return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) -> {
             return new Signal(
                     rs.getLong("signal_id"),
@@ -288,10 +269,9 @@ public class PatientRepository {
     }
 
     /**
-     * Retrieves all symptoms belonging to a session.
-     *
-     * @param sessionId ID of the session.
-     * @return List of Symptoms.
+     * Retrieves all symptoms recorded in a specific measurement session
+     * @param sessionId ID of the session to query.
+     * @return Set of SymptomType enums for that session. Empty set if none exist.
      */
     public Set<SymptomType> findSymptomsBySessionId(Long sessionId) {
         String sql = "SELECT symptoms FROM measurement_sessions WHERE session_id = ?";
@@ -308,6 +288,7 @@ public class PatientRepository {
             return symptomSet;
         }, sessionId);
     }
+
 
     /**
      * This method gets the measurement history (sessions) for a selected patient
