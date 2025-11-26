@@ -1,6 +1,5 @@
 package com.example.telemedicine.signal;
 
-import com.example.telemedicine.signal.SignalUtils;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
@@ -9,33 +8,19 @@ import org.knowm.xchart.style.Styler;
 import org.knowm.xchart.style.markers.SeriesMarkers;
 
 import java.awt.Color;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class ECGProcessor {
 
-    // --- CLASE DE RESULTADOS ---
-    public static class QRSResult {
-        public final List<Integer> rPeaks;
-        public final List<Integer> qPeaks;
-
-        public QRSResult(List<Integer> r, List<Integer> q) {
-            this.rPeaks = r;
-            this.qPeaks = q;
-        }
-    }
-
-    // --- MÉTODOS ESPECÍFICOS DE ECG ---
-
     /**
      * Aplica filtros específicos para ECG (Pasa-banda 5-15Hz y Notch 60Hz).
      */
     public static double[] applyFilters(double[] signal, double fs) {
         // Llama a la caja de herramientas (SignalUtils)
-        double[] passFiltered = SignalUtils.bandpassFilter(signal, fs, 5.0, 15.0, 4);
-        return SignalUtils.notchFilter(passFiltered, fs, 60.0, 30);
+        double[] passFiltered = SignalProcessing.bandpassFilter(signal, fs, 5.0, 15.0, 4);
+        return SignalProcessing.notchFilter(passFiltered, fs, 60.0, 30);
     }
 
     /**
