@@ -3,9 +3,14 @@ package com.example.telemedicine.service;
 import com.example.telemedicine.domain.*;
 import com.example.telemedicine.exceptions.PdfGeneratorException;
 import com.example.telemedicine.repository.PatientRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.example.telemedicine.repository.DoctorRepository;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Set;
@@ -88,5 +93,12 @@ public class DoctorService {
         return doctorRepository.findReportById(reportId);
     }
 
+    public List<Locality> getAllLocalities() {
+        return doctorRepository.getAllLocalities();
+    }
+
+    public Locality addLocality(Locality locality) {
+        return doctorRepository.insertLocality(locality);
+    }
 
 }

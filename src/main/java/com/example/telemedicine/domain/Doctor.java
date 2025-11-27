@@ -13,6 +13,7 @@ public class Doctor {
     private String name;
     private String surname;
     private Gender gender;
+    private Locality locality;
     private List<Patient> patients;
 
     public Doctor() {
@@ -37,11 +38,22 @@ public class Doctor {
         this.patients = new LinkedList<>();
     }
 
-    public Doctor(Long doctorID, String name, String surname, Gender gender) {
+    public Doctor(Long doctorID, String name, String surname, Gender gender, Locality locality) {
         this.doctorId = doctorID;
         this.name = name;
         this.surname = surname;
         this.gender = gender;
+        this.locality = locality;
+    }
+
+    public Doctor(Long doctorId, Long userId, String name, String surname, Gender gender, Locality locality, List<Patient> patients) {
+        this.doctorId = doctorId;
+        this.userId = userId;
+        this.name = name;
+        this.surname = surname;
+        this.gender = gender;
+        this.locality = locality;
+        this.patients = patients;
     }
 
     @Override
@@ -49,12 +61,12 @@ public class Doctor {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Doctor doctor = (Doctor) o;
-        return Objects.equals(doctorId, doctor.doctorId) && Objects.equals(userId, doctor.userId) && Objects.equals(name, doctor.name) && Objects.equals(surname, doctor.surname) && gender == doctor.gender && Objects.equals(patients, doctor.patients);
+        return Objects.equals(doctorId, doctor.doctorId) && Objects.equals(userId, doctor.userId) && Objects.equals(name, doctor.name) && Objects.equals(surname, doctor.surname) && gender == doctor.gender && Objects.equals(locality, doctor.locality) && Objects.equals(patients, doctor.patients);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(doctorId, userId, name, surname, gender, patients);
+        return Objects.hash(doctorId, userId, name, surname, gender, locality, patients);
     }
 
     @Override
@@ -65,6 +77,7 @@ public class Doctor {
                 ", name='" + name + '\'' +
                 ", surname='" + surname + '\'' +
                 ", gender=" + gender +
+                ", locality=" + locality +
                 ", patients=" + patients +
                 '}';
     }

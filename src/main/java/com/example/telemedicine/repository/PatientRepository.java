@@ -119,31 +119,48 @@ public class PatientRepository {
      */
     public Doctor sendDoctorRequest(Long patientId, Long doctorId) {
         String sql = """
-                    UPDATE patients
-                    SET selected_doctor_id = ?, doctor_approval_status = 'PENDING'
-                    WHERE patient_id = ?
-                """;
+                UPDATE patients
+                SET selected_doctor_id = ?, doctor_approval_status = 'PENDING'
+                WHERE patient_id = ?
+            """;
 
         jdbcTemplate.update(sql, doctorId, patientId);
 
-        // return doctor object
+        // Join doctors with localities to get locality info
         String docSql = """
-                    SELECT doctor_id, name, surname, gender
-                    FROM doctors
-                    WHERE doctor_id = ?
-                """;
+                SELECT d.doctor_id, d.name, d.surname, d.gender,
+                       l.locality_id, l.name AS locality_name, l.latitude, l.longitude
+                FROM doctors d
+                LEFT JOIN localities l ON d.locality_id = l.locality_id
+                WHERE d.doctor_id = ?
+            """;
 
         return jdbcTemplate.queryForObject(docSql, (rs, rowNum) -> {
             String genderStr = rs.getString("gender");
             Gender gender = (genderStr != null) ? Gender.valueOf(genderStr) : null;
-            return new Doctor(
+
+            Long localityId = rs.getObject("locality_id") != null ? rs.getLong("locality_id") : null;
+            String localityName = rs.getString("locality_name");
+            Double latitude = rs.getObject("latitude") != null ? rs.getDouble("latitude") : null;
+            Double longitude = rs.getObject("longitude") != null ? rs.getDouble("longitude") : null;
+
+            Locality locality = null;
+            if (localityId != null) {
+                locality = new Locality(localityId, localityName, latitude, longitude);
+            }
+
+            Doctor doctor = new Doctor(
                     rs.getLong("doctor_id"),
                     rs.getString("name"),
                     rs.getString("surname"),
-                    gender
+                    gender,
+                    locality
             );
+
+            return doctor;
         }, doctorId);
     }
+
 
     /**
      * Creates a new measurement session for a patient.

@@ -1,15 +1,13 @@
 package com.example.telemedicine.controller;
 
-import com.example.telemedicine.domain.MeasurementSession;
-import com.example.telemedicine.domain.Patient;
+import com.example.telemedicine.domain.*;
 
-import com.example.telemedicine.domain.Role;
 import com.example.telemedicine.repository.DoctorRepository;
 import com.example.telemedicine.security.JwtService;
 import com.example.telemedicine.service.PatientService;
 import io.jsonwebtoken.Claims;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
-import com.example.telemedicine.domain.Report;
 import com.example.telemedicine.service.PatientService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import com.example.telemedicine.domain.Doctor;
 import com.example.telemedicine.service.DoctorService;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -224,5 +221,16 @@ public class DoctorController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(report.getFileData());
     }
+
+    @GetMapping
+    public List<Locality> getAllLocalities() {
+        return doctorService.getAllLocalities();
+    }
+
+    @PostMapping
+    public Locality addLocality(@RequestBody Locality locality) {
+        return doctorService.addLocality(locality);
+    }
+
 
 }

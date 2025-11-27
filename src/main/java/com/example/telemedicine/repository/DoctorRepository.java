@@ -1,9 +1,6 @@
 package com.example.telemedicine.repository;
 
-import com.example.telemedicine.domain.Gender;
-import com.example.telemedicine.domain.Patient;
-import com.example.telemedicine.domain.Doctor;
-import com.example.telemedicine.domain.Report;
+import com.example.telemedicine.domain.*;
 import com.example.telemedicine.repository.mapper.PatientRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -69,14 +66,18 @@ public class DoctorRepository {
                     SET
                         name = COALESCE(?, name),
                         surname = COALESCE(?, surname),
-                        gender = COALESCE(?::gender_enum, gender)
+                        gender = COALESCE(?::gender_enum, gender),
+                        locality_id = COALESCE(?, locality_id)
                     WHERE doctor_id = ?
                 """;
+
+        Long localityId = newData.getLocality() != null ? newData.getLocality().getLocalityId() : null;
 
         return jdbcTemplate.update(sql,
                 newData.getName(),
                 newData.getSurname(),
                 newData.getGender() != null ? newData.getGender().name() : null,
+                localityId,
                 doctorId
         );
     }
@@ -193,22 +194,35 @@ public class DoctorRepository {
 
     public Doctor findDoctorById(Long doctorId) {
         String sql = """
-                    SELECT doctor_id, name, surname, gender
-                    FROM doctors
-                    WHERE doctor_id = ?
-                """;
+            SELECT d.doctor_id, d.name, d.surname, d.gender,
+                   l.locality_id, l.name AS locality_name, l.latitude, l.longitude
+            FROM doctors d
+            LEFT JOIN localities l ON d.locality_id = l.locality_id
+            WHERE d.doctor_id = ?
+        """;
 
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-            String genderStr = rs.getString("gender");
-            Gender gender = (genderStr != null) ? Gender.valueOf(genderStr) : null;
-            return new Doctor(
-                    rs.getLong("doctor_id"),
-                    rs.getString("name"),
-                    rs.getString("surname"),
-                    gender
-            );
-        }, doctorId);
-    }
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+                Gender gender = null;
+                String genderStr = rs.getString("gender");
+                if (genderStr != null) gender = Gender.valueOf(genderStr);
+
+                Locality locality = null;
+                if (rs.getObject("locality_id") != null) {
+                    locality = new Locality(
+                            rs.getLong("locality_id"),
+                            rs.getString("locality_name"),
+                            rs.getDouble("latitude"),
+                            rs.getDouble("longitude")
+                    );
+                }
+
+                return new Doctor(
+                        rs.getLong("doctor_id"), rs.getString("name"),
+                        rs.getString("surname"), gender, locality
+                );
+            }, doctorId);
+        }
+
 
     /**
      * This method saves a report as a pdf in the database
@@ -260,4 +274,45 @@ public class DoctorRepository {
         }, reportId);
     }
 
+    public List<Locality> getAllLocalities() {
+        String sql = "SELECT locality_id, name, latitude, longitude FROM localities ORDER BY name";
+        return jdbcTemplate.query(sql, (rs, rowNum) ->
+                new Locality(
+                        rs.getLong("locality_id"),
+                        rs.getString("name"),
+                        rs.getDouble("latitude"),
+                        rs.getDouble("longitude")
+                )
+        );
+    }
+
+    public Locality findLocalityById(Long id) {
+        String sql = "SELECT locality_id, name, latitude, longitude FROM localities WHERE locality_id = ?";
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
+                new Locality(
+                        rs.getLong("locality_id"),
+                        rs.getString("name"),
+                        rs.getDouble("latitude"),
+                        rs.getDouble("longitude")
+                ), id);
+    }
+
+    public Locality insertLocality(Locality locality) {
+        String sql = "INSERT INTO localities (name, latitude, longitude) VALUES (?, ?, ?)";
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setLong(1, locality.getLocalityId());
+            ps.setString(2, locality.getName());
+            ps.setDouble(3, locality.getLatitude());
+            ps.setDouble(4, locality.getLongitude());
+            return ps;
+        }, keyHolder);
+        Long id = ((Number) keyHolder.getKeys().get("locality_id")).longValue();
+        locality.setLocalityId(id);
+
+        return locality;
+    }
 }
