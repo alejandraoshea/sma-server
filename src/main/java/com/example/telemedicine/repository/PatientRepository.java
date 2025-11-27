@@ -126,14 +126,13 @@ public class PatientRepository {
 
         jdbcTemplate.update(sql, doctorId, patientId);
 
-        // Join doctors with localities to get locality info
         String docSql = """
-                SELECT d.doctor_id, d.name, d.surname, d.gender,
-                       l.locality_id, l.name AS locality_name, l.latitude, l.longitude
-                FROM doctors d
-                LEFT JOIN localities l ON d.locality_id = l.locality_id
-                WHERE d.doctor_id = ?
-            """;
+            SELECT d.doctor_id, d.name, d.surname, d.gender,
+                   l.locality_id AS locality_id, l.latitude, l.longitude
+            FROM doctors d
+            LEFT JOIN localities l ON d.locality_id = l.locality_id
+            WHERE d.doctor_id = ?
+        """;
 
         return jdbcTemplate.queryForObject(docSql, (rs, rowNum) -> {
             String genderStr = rs.getString("gender");
