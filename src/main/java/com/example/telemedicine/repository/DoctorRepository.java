@@ -189,7 +189,7 @@ public class DoctorRepository {
      */
     public Report saveReport(Report report) {
         String sql = """
-            INSERT INTO reports (patient_id, doctor_id, session_id, file_name, file_type, file_data)
+            INSERT INTO report (patient_id, doctor_id, session_id, file_name, file_type, file_data)
             VALUES (?, ?, ?, ?, ?, ?)
         """;
 
@@ -218,7 +218,7 @@ public class DoctorRepository {
      * @return the report
      */
     public Report findReportById(Long reportId) {
-        String sql = "SELECT * FROM reports WHERE report_id = ?";
+        String sql = "SELECT * FROM report WHERE report_id = ?";
 
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
             Report r = new Report(rs.getLong("report_id"),
