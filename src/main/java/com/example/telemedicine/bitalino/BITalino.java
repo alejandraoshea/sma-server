@@ -61,7 +61,8 @@ public class BITalino {
     private InputStream iStream;
     private OutputStream oStream;
 
-    private static final Pattern BITALINO_TTY = Pattern.compile("^(\\/dev\\/)?(tty|cu)\\.BITalino.*");
+    private static final Pattern BITALINO_TTY =
+            Pattern.compile("^(COM\\d+)|(\\/dev\\/)?(tty|cu)\\.BITalino.*", Pattern.CASE_INSENSITIVE);
 
     public BITalino() {
         number_bytes = 0;
@@ -80,13 +81,13 @@ public class BITalino {
     public Vector<String> findDevices() throws InterruptedException {
         Vector<String> ports = new Vector<>();
         for (SerialPort p : SerialPort.getCommPorts()) {
-            String sys = p.getSystemPortName();       // e.g., /dev/cu.BITalino-XX-XX-DevB or tty.BITalino-XX-XX
-            String desc = p.getDescriptivePortName(); // may include "BITalino"
+            String sys = p.getSystemPortName();
+            String desc = p.getDescriptivePortName();
             boolean looksLikeBitalino =
-                    (sys != null && BITALINO_TTY.matcher(sys).matches()) &&
+                    (sys != null && (sys.matches("COM\\d+") || sys.matches("(tty|cu)\\.BITalino.*"))) &&
                             (desc != null && desc.toLowerCase().contains("bitalino"));
             if (looksLikeBitalino) {
-                ports.add(sys != null ? sys : desc);
+                ports.add(sys);
             }
         }
         return ports;
