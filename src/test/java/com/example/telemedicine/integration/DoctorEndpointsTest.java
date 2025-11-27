@@ -145,13 +145,13 @@ class DoctorEndpointsTest {
                 .andExpect(jsonPath("$[0].sessionId").value(54));
     }
 
+    //** TODO: token report
     @Test
     void generateReportTest() throws Exception {
-        mockMvc.perform(post("/api/doctors/me/report/10/generate")
-                        .header("Authorization", "Bearer dummy"))
+        mockMvc.perform(post("/api/doctors/5/report/10/generate"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.doctorId").value(5))
-                .andExpect(jsonPath("$.patientId").value(10));
+                .andExpect(jsonPath("$.sessionId").value(10));
     }
 
     @Test
