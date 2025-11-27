@@ -139,6 +139,7 @@ public class PatientService {
         return patientRepository.addECG(signal, sessionId);
     }
 
+
     public void generateAndSaveCsvSummary(Long sessionId) {
         MeasurementSession session = patientRepository.findSessionsById(sessionId);
         if (session == null) throw new IllegalArgumentException("Session not found");
@@ -190,5 +191,6 @@ public class PatientService {
         String escaped = input.replace("\"", "\"\"").replace("\n", " ").replace("\r", " ");
         return escaped;
     }
+
 
 }

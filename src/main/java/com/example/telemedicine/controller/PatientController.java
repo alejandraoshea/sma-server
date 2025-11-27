@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -267,5 +268,19 @@ public class PatientController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"session_" + sessionId + "_file.csv\"")
                 .contentType(MediaType.TEXT_PLAIN)
                 .body(csvBytes);
+    }
+
+    @PostMapping("/emg/{sessionId}")
+    public Signal uploadEMG(@PathVariable Long sessionId,
+                            @RequestParam("file") MultipartFile file) throws IOException {
+
+        return patientService.addEMG(file.getBytes(), sessionId);
+    }
+
+    @PostMapping("/ecg/{sessionId}")
+    public Signal uploadECG(@PathVariable Long sessionId,
+                            @RequestParam("file") MultipartFile file) throws IOException {
+
+        return patientService.addECG(file.getBytes(), sessionId);
     }
 }
