@@ -1,12 +1,16 @@
 package com.example.telemedicine.integration;
 
 import com.example.telemedicine.repository.DoctorRepository;
+import com.example.telemedicine.security.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +32,9 @@ class DoctorEndpointsTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private JwtService jwtService;
 
     @BeforeEach
     void setup() {
@@ -75,39 +82,48 @@ class DoctorEndpointsTest {
             INSERT INTO measurement_sessions (session_id, patient_id, time_stamp)
             VALUES (54, 8, NOW())
         """);
+
+        Claims claims = Mockito.mock(Claims.class);
+        Mockito.when(claims.get("doctorId", Long.class)).thenReturn(5L);
+        Mockito.when(claims.get("role")).thenReturn("DOCTOR");
+        Mockito.when(jwtService.extractClaims(Mockito.anyString())).thenReturn(claims);
     }
 
     @Test
-    void getAllDoctors_returnsList() throws Exception {
+    void getAllDoctorsTest() throws Exception {
         mockMvc.perform(get("/api/doctors"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Laura"));
     }
 
     @Test
-    void findDoctorById_returnsCorrectDoctor() throws Exception {
-        mockMvc.perform(get("/api/doctors/5"))
+    void findDoctorByIdTest() throws Exception {
+        mockMvc.perform(get("/api/doctors/me")
+                        .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.surname").value("Lopez"));
     }
 
     @Test
-    void getPatientsOfDoctor_returnsPatients() throws Exception {
-        mockMvc.perform(get("/api/doctors/5/patients"))
+    void getPatientsOfDoctorTest() throws Exception {
+        mockMvc.perform(get("/api/doctors/me/patients")
+                        .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[1].name").value("Jane"));
     }
 
     @Test
-    void getPendingRequests_returnsPendingList() throws Exception {
-        mockMvc.perform(get("/api/doctors/5/requests"))
+    void getPendingRequestsTest() throws Exception {
+        mockMvc.perform(get("/api/doctors/me/requests")
+                        .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Jane"));
     }
 
     @Test
     void approvePatientRequestTest() throws Exception {
-        mockMvc.perform(post("/api/doctors/5/approve/9"))
+        mockMvc.perform(post("/api/doctors/me/approve/9")
+                        .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.doctorApprovalStatus").value("APPROVED"))
                 .andExpect(jsonPath("$.doctorId").value(5));
@@ -115,30 +131,31 @@ class DoctorEndpointsTest {
 
     @Test
     void rejectPatientRequestTest() throws Exception {
-        mockMvc.perform(post("/api/doctors/5/reject/10"))
+        mockMvc.perform(post("/api/doctors/me/reject/10")
+                        .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.doctorApprovalStatus").value("REJECTED"))
                 .andExpect(jsonPath("$.doctorId").value(5));
     }
 
     @Test
-    void getPatientSessions_returnsSessions() throws Exception {
+    void getPatientSessionsTest() throws Exception {
         mockMvc.perform(get("/api/doctors/sessions/patients/8"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].sessionId").value(54));
     }
 
     @Test
-    void generateReport_savesReport() throws Exception {
-        mockMvc.perform(post("/api/doctors/5/report/10/generate"))
+    void generateReportTest() throws Exception {
+        mockMvc.perform(post("/api/doctors/me/report/10/generate")
+                        .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.doctorId").value(5))
-                .andExpect(jsonPath("$.sessionId").value(10));
+                .andExpect(jsonPath("$.patientId").value(10));
     }
 
     @Test
-    void getReport_returnsPdf() throws Exception {
-        // Insert fake report first
+    void getReportTest() throws Exception {
         jdbcTemplate.update("""
             INSERT INTO report (report_id, patient_id, doctor_id, session_id,
                 file_name, file_type, file_data)
