@@ -222,12 +222,12 @@ public class DoctorController {
                 .body(report.getFileData());
     }
 
-    @GetMapping
+    @GetMapping("/localities")
     public List<Locality> getAllLocalities() {
         return doctorService.getAllLocalities();
     }
 
-    @PostMapping
+    @PostMapping("/localities")
     public Locality addLocality(@RequestBody Locality locality) {
         return doctorService.addLocality(locality);
     }
