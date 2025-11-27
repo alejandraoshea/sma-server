@@ -19,28 +19,28 @@ public class Doctor {
 
     }
 
-    public Doctor(Long doctorID, Long userId, String name, String lastName, Gender gender, List<Patient> patients) {
+    public Doctor(Long doctorID, Long userId, String name, String surname, Gender gender, List<Patient> patients) {
         this.doctorId = doctorID;
         this.userId = userId;
         this.name = name;
-        this.surname = lastName;
+        this.surname = surname;
         this.gender = gender;
         this.patients = patients;
     }
 
-    public Doctor(Long doctorID, Long userId, String name, String lastName, Gender gender) {
+    public Doctor(Long doctorID, Long userId, String name, String surname, Gender gender) {
         this.doctorId = doctorID;
         this.userId = userId;
         this.name = name;
-        this.surname = lastName;
+        this.surname = surname;
         this.gender = gender;
         this.patients = new LinkedList<>();
     }
 
-    public Doctor(Long doctorID, String name, String lastName, Gender gender) {
+    public Doctor(Long doctorID, String name, String surname, Gender gender) {
         this.doctorId = doctorID;
         this.name = name;
-        this.surname = lastName;
+        this.surname = surname;
         this.gender = gender;
     }
 

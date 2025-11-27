@@ -3,6 +3,7 @@ package com.example.telemedicine.domain;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -22,6 +23,14 @@ public class MeasurementSession {
         this.timeStamp = timeStamp;
         this.symptomsSet = symptomsSet;
         this.signals = signals;
+    }
+
+    public MeasurementSession(Long sessionId, Long patientId, LocalDateTime timeStamp, Set<SymptomType> symptomsSet) {
+        this.sessionId = sessionId;
+        this.patientId = patientId;
+        this.timeStamp = timeStamp;
+        this.symptomsSet = symptomsSet;
+        this.signals = new LinkedList<>();
     }
 
     @Override

@@ -2,11 +2,15 @@ package com.example.telemedicine.controller;
 
 import com.example.telemedicine.domain.MeasurementSession;
 import com.example.telemedicine.domain.Patient;
+
 import com.example.telemedicine.domain.Role;
 import com.example.telemedicine.security.JwtService;
 import com.example.telemedicine.service.PatientService;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.HttpStatus;
+import com.example.telemedicine.domain.Report;
+import com.example.telemedicine.service.PatientService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,7 +47,6 @@ public class DoctorController {
     /**
      * Finds a doctor using the doctor ID
      *
-     * @param doctorId ID of the doctor
      * @return doctor object
      */
     @GetMapping("/me")
@@ -75,7 +78,6 @@ public class DoctorController {
     /**
      * Retrieves a list of all patients assigned to a specific doctor
      *
-     * @param doctorId doctorId ID of the doctor
      * @return list of patients assigned to the doctor
      */
     @GetMapping("/me/patients")
@@ -88,7 +90,6 @@ public class DoctorController {
     /**
      * Retrieves a list of patients who have requested approval to be assigned to this doctor
      *
-     * @param doctorId ID of the doctor
      * @return list of pending patient requests
      */
     @GetMapping("/me/requests")
@@ -101,7 +102,6 @@ public class DoctorController {
     /**
      * Approves a patient’s request to be assigned to the doctor
      *
-     * @param doctorId  ID of the doctor
      * @param patientId ID of the patient requesting approval
      * @return updated patient object
      */
@@ -116,7 +116,6 @@ public class DoctorController {
     /**
      * Rejects a patient’s request to be assigned to the doctor
      *
-     * @param doctorId  ID of the doctor
      * @param patientId ID of the patient requesting approval
      * @return updated patient object
      */
@@ -153,4 +152,62 @@ public class DoctorController {
 
         return claims;
     }
+
+    /**
+     * Finds a doctor using the doctor ID
+     * @param doctorId ID of the doctor
+     * @return doctor object
+     */
+    @GetMapping("/{doctorId}")
+    public Doctor findDoctorById(@PathVariable Long doctorId){
+        return doctorService.findDoctorById(doctorId);
+    }
+
+    /**
+     * Retrieves a list of patients who have requested approval to be assigned to this doctor
+     * @param doctorId ID of the doctor
+     * @return list of pending patient requests
+     */
+    @GetMapping("/{doctorId}/requests")
+    public List<Patient> getPendingRequests(@PathVariable Long doctorId){
+        return doctorService.getPendingRequests(doctorId);
+    }
+
+    /**
+     * Approves a patient’s request to be assigned to the doctor
+     * @param doctorId ID of the doctor
+     * @param patientId ID of the patient requesting approval
+     * @return updated patient object
+     */
+    @PostMapping("/{doctorId}/approve/{patientId}")
+    public Patient acceptPatientRequest(@PathVariable Long doctorId, @PathVariable Long patientId) {
+        return doctorService.approvePatientRequest(patientId, doctorId);
+    }
+
+    /**
+     * Rejects a patient’s request to be assigned to the doctor
+     * @param doctorId ID of the doctor
+     * @param patientId ID of the patient requesting approval
+     * @return updated patient object
+     */
+    @PostMapping("/{doctorId}/reject/{patientId}")
+    public Patient rejectPatientRequest(@PathVariable Long doctorId, @PathVariable Long patientId) {
+        return doctorService.rejectPatientRequest(patientId, doctorId);
+    }
+
+    @PostMapping("/{doctorId}/report/{sessionId}/generate")
+    public Report generateReport(@PathVariable Long doctorId, @PathVariable Long sessionId) {
+        return doctorService.generateReport(doctorId, sessionId);
+    }
+
+    @GetMapping("/reports/{reportId}")
+    public ResponseEntity<byte[]> getReport(@PathVariable Long reportId) {
+        Report report = doctorService.getReport(reportId);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"" + report.getFileName() + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(report.getFileData());
+    }
+
 }

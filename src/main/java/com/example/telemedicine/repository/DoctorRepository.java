@@ -3,10 +3,15 @@ package com.example.telemedicine.repository;
 import com.example.telemedicine.domain.Gender;
 import com.example.telemedicine.domain.Patient;
 import com.example.telemedicine.domain.Doctor;
+import com.example.telemedicine.domain.Report;
 import com.example.telemedicine.repository.mapper.PatientRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 
 @Repository
@@ -203,6 +208,56 @@ public class DoctorRepository {
                     gender
             );
         }, doctorId);
+    }
+
+    /**
+     * This method saves a report as a pdf in the database
+     * @param report the report to be saved
+     * @return the report saved
+     */
+    public Report saveReport(Report report) {
+        String sql = """
+            INSERT INTO report (patient_id, doctor_id, session_id, file_name, file_type, file_data)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """;
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setLong(1, report.getPatientId());
+            ps.setLong(2, report.getDoctorId());
+            ps.setLong(3, report.getSessionId());
+            ps.setString(4, report.getFileName());
+            ps.setString(5, report.getFileType());
+            ps.setBytes(6, report.getFileData());
+            return ps;
+        }, keyHolder);
+
+        Long id = ((Number) keyHolder.getKeys().get("report_id")).longValue();
+        report.setReportId(id);
+        return report;
+    }
+
+
+    /**
+     * This method retrieves the pdf (report) by the report id
+     * @param reportId the id of the report to retrieve
+     * @return the report
+     */
+    public Report findReportById(Long reportId) {
+        String sql = "SELECT * FROM report WHERE report_id = ?";
+
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            Report r = new Report(rs.getLong("report_id"),
+                    rs.getLong("patient_id"),
+                    rs.getLong("doctor_id"),
+                    rs.getLong("session_id"),
+                    rs.getBytes("file_data"),
+                    rs.getString("file_name"),
+                    rs.getString("file_type"));
+            return r;
+        }, reportId);
     }
 
 }

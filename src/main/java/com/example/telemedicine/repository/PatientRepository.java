@@ -261,17 +261,17 @@ public class PatientRepository {
      */
     public List<Signal> findSignalsBySessionId(Long sessionId) {
         String sql = "SELECT signal_id, session_id, time_stamp, patient_data, fs, signal_type FROM signals WHERE session_id = ? ORDER BY time_stamp";
-        return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) -> {
-            return new Signal(
+        return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) ->
+             new Signal(
                     rs.getLong("signal_id"),
                     rs.getLong("session_id"),
                     rs.getTimestamp("time_stamp").toLocalDateTime(),
                     SignalType.valueOf(rs.getString("signal_type")),
                     rs.getString("patient_data"),
                     rs.getInt("fs")
-            );
-        });
+             ));
     }
+
 
     /**
      * Retrieves all symptoms recorded in a specific measurement session
@@ -328,6 +328,33 @@ public class PatientRepository {
         }, patientId);
     }
 
+    /**
+     * Retrieves a measurement session by its id
+     * @param sessionId The id of the session
+     * @return Measurement Session
+     */
+    public MeasurementSession findSessionsById(Long sessionId) {
+        String sql = """
+                SELECT patient_id, time_stamp, symptoms
+                FROM measurement_sessions
+                WHERE session_id = ?
+                ORDER BY time_stamp DESC
+                """;
+
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            Long pid = rs.getLong("patient_id");
+            LocalDateTime timestamp = rs.getTimestamp("time_stamp").toLocalDateTime();
+            java.sql.Array symptomsArray = rs.getArray("symptoms");
+            Set<SymptomType> symptomSet = new HashSet<>();
+            if (symptomsArray != null) {
+                String[] symptomsDb = (String[]) symptomsArray.getArray();
+                for (String s : symptomsDb) {
+                    symptomSet.add(SymptomType.valueOf(s));
+                }
+            }
+            return new MeasurementSession(sessionId, pid, timestamp, symptomSet);
+        }, sessionId);
+    }
 
     /**
      * Retrieves all measurement sessions that occurred on a specific date.
@@ -453,6 +480,22 @@ public class PatientRepository {
         Long signalId = ((Number) keyHolder.getKeys().get("signal_id")).longValue();
 
         return new Signal(signalId, sessionId, timestamp, SignalType.ECG, finalData, parsed.getFs());
+    }
+
+    public void saveCsvSummaryFile(Long sessionId, byte[] csvBytes, String filename, String mimeType) {
+        String sql = """
+        UPDATE measurement_sessions
+        SET session_file = ?, session_filename = ?, session_mime_type = ? 
+        WHERE session_id = ?
+        """;
+        jdbcTemplate.update(sql, csvBytes, filename, mimeType, sessionId);
+    }
+
+    public byte[] getCsvSummaryFile(Long sessionId) {
+        String sql = "SELECT session_file FROM measurement_sessions WHERE session_id = ?";
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
+                rs.getBytes("session_file"),
+                sessionId);
     }
 
 }
