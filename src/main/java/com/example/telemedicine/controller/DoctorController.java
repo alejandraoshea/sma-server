@@ -4,6 +4,7 @@ import com.example.telemedicine.domain.MeasurementSession;
 import com.example.telemedicine.domain.Patient;
 
 import com.example.telemedicine.domain.Role;
+import com.example.telemedicine.repository.DoctorRepository;
 import com.example.telemedicine.security.JwtService;
 import com.example.telemedicine.service.PatientService;
 import io.jsonwebtoken.Claims;
@@ -27,11 +28,13 @@ public class DoctorController {
     private final DoctorService doctorService;
     private final PatientService patientService;
     private final JwtService jwtService;
+    private final DoctorRepository doctorRepository;
 
-    public DoctorController(DoctorService doctorService, PatientService patientService, JwtService jwtService) {
+    public DoctorController(DoctorService doctorService, PatientService patientService, JwtService jwtService, DoctorRepository doctorRepository) {
         this.doctorService = doctorService;
         this.patientService = patientService;
         this.jwtService = jwtService;
+        this.doctorRepository = doctorRepository;
     }
 
     /**
@@ -50,10 +53,18 @@ public class DoctorController {
      * @return doctor object
      */
     @GetMapping("/me")
-    public Doctor getCurrentDoctor(@RequestHeader("Authorization") String authHeader) {
-        Claims claims = jwtService.extractClaims(authHeader);
+    public ResponseEntity<?> getPatient(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer", "").trim();
+        Claims claims = jwtService.extractClaims(token);
+
+        if (!claims.get("role").equals(Role.DOCTOR.name())) {
+            return ResponseEntity.status(403).body("Forbidden");
+        }
+
         Long doctorId = claims.get("doctorId", Long.class);
-        return doctorService.findDoctorById(doctorId);
+        Doctor doctor = doctorRepository.findDoctorById(doctorId);
+
+        return ResponseEntity.ok(doctor);
     }
 
     /**
@@ -155,27 +166,30 @@ public class DoctorController {
 
     /**
      * Finds a doctor using the doctor ID
+     *
      * @param doctorId ID of the doctor
      * @return doctor object
      */
     @GetMapping("/{doctorId}")
-    public Doctor findDoctorById(@PathVariable Long doctorId){
+    public Doctor findDoctorById(@PathVariable Long doctorId) {
         return doctorService.findDoctorById(doctorId);
     }
 
     /**
      * Retrieves a list of patients who have requested approval to be assigned to this doctor
+     *
      * @param doctorId ID of the doctor
      * @return list of pending patient requests
      */
     @GetMapping("/{doctorId}/requests")
-    public List<Patient> getPendingRequests(@PathVariable Long doctorId){
+    public List<Patient> getPendingRequests(@PathVariable Long doctorId) {
         return doctorService.getPendingRequests(doctorId);
     }
 
     /**
      * Approves a patient’s request to be assigned to the doctor
-     * @param doctorId ID of the doctor
+     *
+     * @param doctorId  ID of the doctor
      * @param patientId ID of the patient requesting approval
      * @return updated patient object
      */
@@ -186,7 +200,8 @@ public class DoctorController {
 
     /**
      * Rejects a patient’s request to be assigned to the doctor
-     * @param doctorId ID of the doctor
+     *
+     * @param doctorId  ID of the doctor
      * @param patientId ID of the patient requesting approval
      * @return updated patient object
      */
