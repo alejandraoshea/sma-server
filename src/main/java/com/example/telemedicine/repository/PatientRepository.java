@@ -93,14 +93,19 @@ public class PatientRepository {
             p.setUserId(rs.getLong("user_id"));
             p.setName(rs.getString("name"));
             p.setSurname(rs.getString("surname"));
-            p.setGender(rs.getString("gender") != null ? Gender.valueOf(rs.getString("gender")) : null);
+
+            String genderStr = rs.getString("gender");
+            p.setGender(genderStr != null ? Gender.valueOf(genderStr) : null);
+
             p.setBirthDate(rs.getDate("birth_date") != null ? rs.getDate("birth_date").toLocalDate() : null);
             p.setHeight(Long.valueOf(rs.getObject("height") != null ? rs.getInt("height") : 0));
             p.setWeight(rs.getObject("weight") != null ? rs.getInt("weight") : 0);
             p.setDoctorId(rs.getObject("doctor_id") != null ? rs.getLong("doctor_id") : null);
             p.setSelectedDoctorId(rs.getObject("selected_doctor_id") != null ? rs.getLong("selected_doctor_id") : null);
-            p.setDoctorApprovalStatus(rs.getString("doctor_approval_status") != null ?
-                    DoctorApprovalStatus.valueOf(rs.getString("doctor_approval_status")) : null);
+
+            String statusStr = rs.getString("doctor_approval_status");
+            p.setDoctorApprovalStatus(statusStr != null ? DoctorApprovalStatus.valueOf(statusStr) : null);
+
             return p;
         }, patientId);
     }
@@ -128,13 +133,16 @@ public class PatientRepository {
                     WHERE doctor_id = ?
                 """;
 
-        return jdbcTemplate.queryForObject(docSql, (rs, rowNum) ->
-                new Doctor(
-                        rs.getLong("doctor_id"),
-                        rs.getString("name"),
-                        rs.getString("surname"),
-                        Gender.valueOf(rs.getString("gender"))
-                ), doctorId);
+        return jdbcTemplate.queryForObject(docSql, (rs, rowNum) -> {
+            String genderStr = rs.getString("gender");
+            Gender gender = (genderStr != null) ? Gender.valueOf(genderStr) : null;
+            return new Doctor(
+                    rs.getLong("doctor_id"),
+                    rs.getString("name"),
+                    rs.getString("surname"),
+                    gender
+            );
+        }, doctorId);
     }
 
     /**
@@ -225,8 +233,8 @@ public class PatientRepository {
         }
 
         String sql = """
-                INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO signals (session_id, time_stamp, signal_type, patient_data)
+                VALUES (?, ?, ?::signal_type_enum, ?)
                 """;
 
         LocalDateTime timestamp;
@@ -236,14 +244,13 @@ public class PatientRepository {
             timestamp = LocalDateTime.now();
         }
 
-        jdbcTemplate.update(sql, patientId, sessionId, Timestamp.valueOf(timestamp),
+        jdbcTemplate.update(sql, sessionId, Timestamp.valueOf(timestamp),
                 signal.getSignalType().name(), signal.getPatientSignalData()
         );
 
         signal.setTimestamp(timestamp);
         return signal;
     }
-
 
 
     /**
@@ -268,6 +275,7 @@ public class PatientRepository {
 
     /**
      * Retrieves all symptoms recorded in a specific measurement session
+     *
      * @param sessionId ID of the session to query.
      * @return Set of SymptomType enums for that session. Empty set if none exist.
      */
@@ -375,21 +383,20 @@ public class PatientRepository {
         String finalData = SignalProcessing.doubleArrayToString(finalFiltered);
 
         String sql = """
-            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, fs)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """;
+                    INSERT INTO signals (session_id, time_stamp, signal_type, patient_data, fs)
+                    VALUES (?, ?, ?::signal_type_enum, ?, ?)
+                """;
 
         LocalDateTime timestamp = LocalDateTime.now();
         KeyHolder key = new GeneratedKeyHolder();
 
         jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, patientId);
-            ps.setLong(2, sessionId);
-            ps.setTimestamp(3, Timestamp.valueOf(timestamp));
-            ps.setString(4, SignalType.EMG.name());
-            ps.setString(5, finalData);
-            ps.setInt(6, parsed.getFs());
+            ps.setLong(1, sessionId);
+            ps.setTimestamp(2, Timestamp.valueOf(timestamp));
+            ps.setString(3, SignalType.EMG.name());
+            ps.setString(4, finalData);
+            ps.setInt(5, parsed.getFs());
             return ps;
         }, key);
 
@@ -426,21 +433,20 @@ public class PatientRepository {
 
         String finalData = SignalProcessing.doubleArrayToString(filtered);
         String sql = """
-            INSERT INTO signals (patient_id, session_id, time_stamp, signal_type, patient_data, fs)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """;
+                    INSERT INTO signals (session_id, time_stamp, signal_type, patient_data, fs)
+                    VALUES (?, ?, ?::signal_type_enum, ?, ?)
+                """;
 
         LocalDateTime timestamp = LocalDateTime.now();
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, patientId);
-            ps.setLong(2, sessionId);
-            ps.setTimestamp(3, Timestamp.valueOf(timestamp));
-            ps.setString(4, SignalType.ECG.name());
-            ps.setString(5, finalData);
-            ps.setInt(6, parsed.getFs());
+            ps.setLong(1, sessionId);
+            ps.setTimestamp(2, Timestamp.valueOf(timestamp));
+            ps.setString(3, SignalType.ECG.name());
+            ps.setString(4, finalData);
+            ps.setInt(5, parsed.getFs());
             return ps;
         }, keyHolder);
 

@@ -23,6 +23,19 @@ public class DoctorService {
         return doctorRepository.findPatientsByDoctorId(doctorId);
     }
 
+    /**
+     * Updates doctor's personal information according to form
+     *
+     * @param doctorId
+     * @param newData
+     */
+    public void updateDoctorInfo(Long doctorId, Doctor newData) {
+        int updated = doctorRepository.updateDoctorInfo(doctorId, newData);
+        if (updated == 0) throw new RuntimeException("Doctor not found");
+
+        doctorRepository.findDoctorById(doctorId);
+    }
+
     public List<MeasurementSession> getPatientSessions(Long patientId) {
         return patientRepository.findSessionsByPatientId(patientId);
     }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -106,6 +107,24 @@ public class PatientController {
     }
 
     //**Session related endpoints
+
+    @PostMapping("/api/device/mac")
+    public ResponseEntity<?> receiveMac(@RequestBody Map<String, String> body) {
+
+        String mac = body.get("macAddress");
+
+        System.out.println("Received MAC: " + mac);
+
+        if (mac == null) {
+            return ResponseEntity.badRequest().body("Missing macAddress");
+        }
+
+        if (!mac.matches("^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$")) {
+            return ResponseEntity.badRequest().body("Invalid MAC format");
+        }
+
+        return ResponseEntity.ok("MAC accepted");
+    }
 
     /**
      * Starts a new measurement session

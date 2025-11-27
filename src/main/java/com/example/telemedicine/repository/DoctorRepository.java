@@ -41,7 +41,7 @@ public class DoctorRepository {
     public List<Patient> findPatientsByDoctorId(Long doctorId) {
         String sql = """
                     SELECT patient_id, user_id, name, surname, gender, birth_date,
-                           height, weight, sessions, doctor_id,
+                           height, weight, doctor_id,
                            selected_doctor_id, doctor_approval_status
                     FROM patients
                     WHERE doctor_id = ?
@@ -49,6 +49,31 @@ public class DoctorRepository {
                 """;
 
         return jdbcTemplate.query(sql, new PatientRowMapper(), doctorId);
+    }
+
+    /**
+     * Updates doctor's personal information in the database using SQL.
+     *
+     * @param doctorId ID of the patient to update
+     * @param newData   Doctor object containing new data (null fields are ignored)
+     * @return number of rows updated (should be 1 if successful)
+     */
+    public int updateDoctorInfo(Long doctorId, Doctor newData) {
+        String sql = """
+                    UPDATE doctors
+                    SET
+                        name = COALESCE(?, name),
+                        surname = COALESCE(?, surname),
+                        gender = COALESCE(?::gender_enum, gender)
+                    WHERE doctor_id = ?
+                """;
+
+        return jdbcTemplate.update(sql,
+                newData.getName(),
+                newData.getSurname(),
+                newData.getGender() != null ? newData.getGender().name() : null,
+                doctorId
+        );
     }
 
     /**
@@ -168,13 +193,16 @@ public class DoctorRepository {
                     WHERE doctor_id = ?
                 """;
 
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
-                new Doctor(
-                        rs.getLong("doctor_id"),
-                        rs.getString("name"),
-                        rs.getString("surname"),
-                        Gender.valueOf(rs.getString("gender"))
-                ), doctorId);
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            String genderStr = rs.getString("gender");
+            Gender gender = (genderStr != null) ? Gender.valueOf(genderStr) : null;
+            return new Doctor(
+                    rs.getLong("doctor_id"),
+                    rs.getString("name"),
+                    rs.getString("surname"),
+                    gender
+            );
+        }, doctorId);
     }
 
 }

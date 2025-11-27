@@ -15,6 +15,10 @@ public class Doctor {
     private Gender gender;
     private List<Patient> patients;
 
+    public Doctor() {
+
+    }
+
     public Doctor(Long doctorID, Long userId, String name, String lastName, Gender gender, List<Patient> patients) {
         this.doctorId = doctorID;
         this.userId = userId;
