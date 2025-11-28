@@ -286,14 +286,15 @@ public class PatientController {
                 .body(csvBytes);
     }
 
-    @PostMapping("/emg/{sessionId}")
+
+    @PostMapping(value="/sessions/{sessionId}/emg", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Signal uploadEMG(@PathVariable Long sessionId,
                             @RequestParam("file") MultipartFile file) throws IOException {
 
         return patientService.addEMG(file.getBytes(), sessionId);
     }
 
-    @PostMapping("/ecg/{sessionId}")
+    @PostMapping(value="/sessions/{sessionId}/ecg", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Signal uploadECG(@PathVariable Long sessionId,
                             @RequestParam("file") MultipartFile file) throws IOException {
 

@@ -406,6 +406,7 @@ public class PatientRepository {
      * @throws IllegalStateException if the file is malformed or session is invalid.
      */
     public Signal addEMG(byte[] fileBytes, Long sessionId) {
+        ensureSymptomsLogged(sessionId);
         String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
         Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
 
@@ -459,6 +460,7 @@ public class PatientRepository {
      * @throws IllegalStateException if file is empty or session invalid.
      */
     public Signal addECG(byte[] fileBytes, Long sessionId) {
+        ensureSymptomsLogged(sessionId);
         String selectPatientIdSql = "SELECT patient_id FROM measurement_sessions WHERE session_id = ?";
         Long patientId = jdbcTemplate.queryForObject(selectPatientIdSql, Long.class, sessionId);
 
@@ -581,5 +583,18 @@ public class PatientRepository {
                     locality
             );
         }, selectedDoctorId);
+    }
+
+    /**
+     * This method ensures the symptoms are logged before uploading the signals
+     * @param sessionId the id of the session
+     */
+    private void ensureSymptomsLogged(Long sessionId) {
+        String sql = "SELECT COUNT(*) FROM session_symptoms WHERE session_id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, sessionId);
+
+        if (count == null || count == 0) {
+            throw new IllegalStateException("You must log symptoms before recording signals.");
+        }
     }
 }
