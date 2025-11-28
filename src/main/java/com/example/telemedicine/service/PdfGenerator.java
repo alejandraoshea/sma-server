@@ -45,7 +45,7 @@ public class PdfGenerator {
      * @return A byte array representing the generated PDF file.
      * @throws PdfGeneratorException If errors occur during the PDF creation.
      */
-    public byte[] generateSessionPDF(Patient patient, MeasurementSession session, Set<SymptomType> symptoms, List<Signal> signals, String doctorComments) throws PdfGeneratorException {
+    public byte[] generateSessionPDF(Patient patient, MeasurementSession session, Set<SymptomType> symptoms, List<Signal> signals) throws PdfGeneratorException {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             float marginLeft = 100f;
             float marginRight = 100f;
@@ -61,10 +61,6 @@ public class PdfGenerator {
             addPatientAndSessionTable(doc, patient, session);
             addSymptoms(doc, symptoms);
             addSignals(doc, writer, signals);
-
-            if (doctorComments != null && !doctorComments.isEmpty()) {
-                addDoctorComments(doc, doctorComments);
-            }
 
             doc.close();
             return baos.toByteArray();

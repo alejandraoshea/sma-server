@@ -2,6 +2,7 @@ package com.example.telemedicine.domain;
 
 import lombok.Data;
 
+import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
@@ -15,9 +16,9 @@ public class Report {
     private byte[] fileData;
     private String fileName;
     private String fileType;
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
-    public Report(Long reportId, Long patientId, Long doctorId, Long sessionId, byte[] fileData, String fileName, String fileType) {
+    public Report(Long reportId, Long patientId, Long doctorId, Long sessionId, byte[] fileData, String fileName, String fileType, LocalDateTime createdAt) {
         this.reportId = reportId;
         this.patientId = patientId;
         this.doctorId = doctorId;
@@ -25,12 +26,16 @@ public class Report {
         this.fileData = fileData;
         this.fileName = fileName;
         this.fileType = fileType;
+        this.createdAt = createdAt;
     }
 
     public Report(Long patientId, Long doctorId, Long sessionId, byte[] fileData, String fileName, String fileType) {
-        this.patientId = patientId;;
-        this.doctorId = doctorId;;
-        this.sessionId = sessionId;;
+        this.patientId = patientId;
+        ;
+        this.doctorId = doctorId;
+        ;
+        this.sessionId = sessionId;
+        ;
         this.fileData = fileData;
         this.fileName = fileName;
         this.fileType = fileType;
