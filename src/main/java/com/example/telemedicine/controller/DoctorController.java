@@ -208,18 +208,46 @@ public class DoctorController {
     }
 
     @PostMapping("/{doctorId}/report/{sessionId}/generate")
-    public Report generateReport(@PathVariable Long doctorId, @PathVariable Long sessionId) {
+    public Report generateReport(
+            @PathVariable Long doctorId,
+            @PathVariable Long sessionId,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        Claims claims = jwtService.extractClaims(authHeader.replace("Bearer ", ""));
+        Long tokenDoctorId = claims.get("doctorId", Long.class);
+
+        if (!doctorId.equals(tokenDoctorId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot generate reports for other doctors");
+        }
+
         return doctorService.generateReport(doctorId, sessionId);
     }
 
     @GetMapping("/reports/{reportId}")
-    public ResponseEntity<byte[]> getReport(@PathVariable Long reportId) {
-        Report report = doctorService.getReport(reportId);
+    public ResponseEntity<byte[]> getReport(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long reportId) {
 
-        return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=\"" + report.getFileName() + "\"")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(report.getFileData());
+        try {
+            String token = authHeader.replace("Bearer ", "").trim();
+            Claims claims = jwtService.extractClaims(token);
+            Long doctorId = claims.get("doctorId", Long.class);
+
+            Report report = doctorService.getReport(reportId, doctorId);
+
+            if (report == null) {
+                return ResponseEntity.status(403).build();
+            }
+
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"" + report.getFileName() + "\"")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(report.getFileData());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @GetMapping("/localities")

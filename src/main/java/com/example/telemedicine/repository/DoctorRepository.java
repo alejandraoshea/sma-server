@@ -261,26 +261,31 @@ public class DoctorRepository {
         return report;
     }
 
-
     /**
-     * This method retrieves the pdf (report) by the report id
+     * This method retrieves the PDF (report) by the report id and verifies the doctor owns it
      *
      * @param reportId the id of the report to retrieve
-     * @return the report
+     * @param doctorId the id of the doctor requesting the report
+     * @return the report if it belongs to the doctor, otherwise null
      */
-    public Report findReportById(Long reportId) {
-        String sql = "SELECT * FROM report WHERE report_id = ?";
+    public Report findReportById(Long reportId, Long doctorId) {
+        String sql = "SELECT * FROM report WHERE report_id = ? AND doctor_id = ?";
 
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-            Report r = new Report(rs.getLong("report_id"),
-                    rs.getLong("patient_id"),
-                    rs.getLong("doctor_id"),
-                    rs.getLong("session_id"),
-                    rs.getBytes("file_data"),
-                    rs.getString("file_name"),
-                    rs.getString("file_type"));
-            return r;
-        }, reportId);
+        try {
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+                return new Report(
+                        rs.getLong("report_id"),
+                        rs.getLong("patient_id"),
+                        rs.getLong("doctor_id"),
+                        rs.getLong("session_id"),
+                        rs.getBytes("file_data"),
+                        rs.getString("file_name"),
+                        rs.getString("file_type")
+                );
+            }, reportId, doctorId);
+        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 
     public List<Locality> getAllLocalities() {

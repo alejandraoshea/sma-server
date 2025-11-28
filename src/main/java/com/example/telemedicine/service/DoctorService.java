@@ -64,7 +64,7 @@ public class DoctorService {
         return doctorRepository.getPendingRequests(doctorId);
     }
 
-    public Doctor findDoctorById(Long doctorId){
+    public Doctor findDoctorById(Long doctorId) {
         return doctorRepository.findDoctorById(doctorId);
     }
 
@@ -88,9 +88,11 @@ public class DoctorService {
         return doctorRepository.saveReport(report);
     }
 
-    /** Fetch stored report PDF */
-    public Report getReport(Long reportId) {
-        return doctorRepository.findReportById(reportId);
+    /**
+     * Fetch stored report PDF
+     */
+    public Report getReport(Long reportId, Long doctorId) {
+        return doctorRepository.findReportById(reportId, doctorId);
     }
 
     public List<Locality> getAllLocalities() {
