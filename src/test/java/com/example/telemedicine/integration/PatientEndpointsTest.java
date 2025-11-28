@@ -199,7 +199,7 @@ public class PatientEndpointsTest {
     }
 
     @Test
-    void uploadEcgOctetStreamTest() throws Exception {
+    void uploadEcgByteTest() throws Exception {
         long sessionId = startSessionAndReturnId();
         postSymptoms(sessionId, SymptomType.FEVER);
 
@@ -212,7 +212,7 @@ public class PatientEndpointsTest {
     }
 
     @Test
-    void uploadEmgOctetStreamTest() throws Exception {
+    void uploadEmgByteTest() throws Exception {
         long sessionId = startSessionAndReturnId();
         postSymptoms(sessionId, SymptomType.FEVER);
 
@@ -225,7 +225,7 @@ public class PatientEndpointsTest {
     }
 
     @Test
-    void uploadEcgMultipartTest() throws Exception {
+    void uploadEcgFileTest() throws Exception {
         long sessionId = startSessionAndReturnId();
         postSymptoms(sessionId, SymptomType.FEVER);
 
@@ -238,7 +238,7 @@ public class PatientEndpointsTest {
     }
 
     @Test
-    void uploadEmgMultipartTest() throws Exception {
+    void uploadEmgFileTest() throws Exception {
         long sessionId = startSessionAndReturnId();
         postSymptoms(sessionId, SymptomType.FEVER);
 
