@@ -77,7 +77,7 @@ public class DoctorService {
 
         byte[] pdfBytes = new byte[0];
         try {
-            pdfBytes = pdfGenerator.generateSessionPDF(patient, session, symptoms, signals, doctorComment);
+            pdfBytes = pdfGenerator.generateSessionPDF(patient, session, symptoms, signals);
         } catch (PdfGeneratorException e) {
             throw new RuntimeException(e);
         }
