@@ -16,11 +16,28 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Service responsible for generating PDF files containing patient measurement sessions
+ * information.
+ * The PDF includes: Patient information, Measurement session details, recorded Signals
+ * ECG/EMG, selected Symptoms.
+ * Uses the iText library to create PDFs and returns the result as a byte array suitable
+ * for storing the information in a database.
+ */
 @Service
 public class PdfGenerator {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
 
+    /**
+     * Generates a PDF document for a patient measurement session.
+     * @param patient Patient to whom the session belongs.
+     * @param session Measurement session desired to document.
+     * @param symptoms Set of symptoms selected during the session.
+     * @param signals List of signals recording during the session.
+     * @return A byte array representing the generated PDF file.
+     * @throws PdfGeneratorException If errors occur during the PDF creation.
+     */
     public byte[] generateSessionPDF(Patient patient, MeasurementSession session, Set<SymptomType> symptoms, List<Signal> signals) throws PdfGeneratorException {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             Document doc = new Document(PageSize.A4);
@@ -41,6 +58,11 @@ public class PdfGenerator {
         }
     }
 
+    /**
+     * Adds the PDF title for the document.
+     * @param doc PDF document
+     * @throws DocumentException If an error occurs while adding the title.
+     */
     private void addTitle(Document doc) throws DocumentException {
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, BaseColor.DARK_GRAY);
         Paragraph title = new Paragraph("Measurement Session Report", titleFont);
@@ -49,6 +71,12 @@ public class PdfGenerator {
         doc.add(title);
     }
 
+    /**
+     * Adds patient information to the PDF document.
+     * @param doc PDF document.
+     * @param patient
+     * @throws DocumentException Erros launched while adding patient info.
+     */
     private void addPatientInfo(Document doc, Patient patient) throws DocumentException {
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
         Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
@@ -62,6 +90,12 @@ public class PdfGenerator {
         doc.add(Chunk.NEWLINE);
     }
 
+    /**
+     * Adds measurement session details to the PDF document.
+     * @param doc
+     * @param session Measurement session
+     * @throws DocumentException
+     */
     private void addSessionInfo(Document doc, MeasurementSession session) throws DocumentException {
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
         Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
@@ -72,6 +106,12 @@ public class PdfGenerator {
         doc.add(Chunk.NEWLINE);
     }
 
+    /**
+     * Adds rselected symptoms to the PDF document.
+     * @param doc
+     * @param symptoms
+     * @throws DocumentException
+     */
     private void addSymptoms(Document doc, Set<SymptomType> symptoms) throws DocumentException {
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
         Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
@@ -88,6 +128,12 @@ public class PdfGenerator {
         doc.add(Chunk.NEWLINE);
     }
 
+    /**
+     * Adds recorded signals to the PDF document.
+     * @param doc
+     * @param signals List of registered biosignals.
+     * @throws DocumentException
+     */
     private void addSignals(Document doc, List<Signal> signals) throws DocumentException {
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
         Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
