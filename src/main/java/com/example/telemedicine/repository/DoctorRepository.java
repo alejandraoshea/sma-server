@@ -201,26 +201,33 @@ public class DoctorRepository {
                  WHERE d.doctor_id = ?
                 """;
 
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-            Gender gender = null;
-            String genderStr = rs.getString("gender");
-            if (genderStr != null) gender = Gender.valueOf(genderStr);
+        try {
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+                Gender gender = null;
+                String genderStr = rs.getString("gender");
+                if (genderStr != null) gender = Gender.valueOf(genderStr);
 
-            Locality locality = null;
-            if (rs.getObject("locality_id") != null) {
-                locality = new Locality(
-                        rs.getLong("locality_id"),
-                        rs.getString("localityName"),
-                        rs.getDouble("latitude"),
-                        rs.getDouble("longitude")
+                Locality locality = null;
+                if (rs.getObject("locality_id") != null) {
+                    locality = new Locality(
+                            rs.getLong("locality_id"),
+                            rs.getString("localityName"),
+                            rs.getDouble("latitude"),
+                            rs.getDouble("longitude")
+                    );
+                }
+
+                return new Doctor(
+                        rs.getLong("doctor_id"), rs.getString("name"),
+                        rs.getString("surname"), gender, locality
                 );
-            }
-
-            return new Doctor(
-                    rs.getLong("doctor_id"), rs.getString("name"),
-                    rs.getString("surname"), gender, locality
-            );
-        }, doctorId);
+            }, doctorId);
+        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 

@@ -4,6 +4,7 @@ import com.example.telemedicine.domain.*;
 import com.example.telemedicine.repository.PatientRepository;
 import com.example.telemedicine.repository.UserRepository;
 import com.example.telemedicine.security.JwtService;
+import com.example.telemedicine.service.DoctorService;
 import com.example.telemedicine.service.PatientService;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.HttpHeaders;
@@ -26,13 +27,15 @@ import java.util.Set;
 @RequestMapping("/api/patients")
 public class PatientController {
     private final PatientService patientService;
+    private final DoctorService doctorService;
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
 
-    public PatientController(PatientService patientService, JwtService jwtService, UserRepository userRepository,
+    public PatientController(PatientService patientService, DoctorService doctorService, JwtService jwtService, UserRepository userRepository,
                              PatientRepository patientRepository) {
         this.patientService = patientService;
+        this.doctorService = doctorService;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
@@ -303,9 +306,32 @@ public class PatientController {
 
     @GetMapping("/me/map-doctors")
     public List<Doctor> getDoctorsForMap(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.substring(7);
+        String token = authHeader.replace("Bearer ", "").trim();
         Claims claims = jwtService.extractClaims(token);
         Long patientId = claims.get("patientId", Long.class);
         return patientService.getDoctorsForMap(patientId);
+    }
+
+    @GetMapping("/me/doctor")
+    public ResponseEntity<Doctor> getDoctor(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "").trim();
+
+            Claims claims = jwtService.extractClaims(token);
+            Long patientId = claims.get("patientId", Long.class);
+
+            Patient patient = patientService.findById(patientId);
+
+            if (patient.getSelectedDoctorId() == null) {
+                return ResponseEntity.noContent().build();
+            }
+
+            Doctor doctor = doctorService.findDoctorById(patient.getSelectedDoctorId());
+
+            return ResponseEntity.ok(doctor);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 }
