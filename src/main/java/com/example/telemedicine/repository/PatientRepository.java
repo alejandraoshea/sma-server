@@ -7,10 +7,8 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -446,6 +444,10 @@ public class PatientRepository {
 
         Long signalId = ((Number) key.getKeys().get("signal_id")).longValue();
 
+        if (hasBothSignals(sessionId)) {
+            generateAndSaveCsvSummary(sessionId);
+        }
+
         return new Signal(signalId, sessionId, timestamp, SignalType.EMG, finalData, parsed.getFs());
     }
 
@@ -497,6 +499,10 @@ public class PatientRepository {
 
         Long signalId = ((Number) keyHolder.getKeys().get("signal_id")).longValue();
 
+        if (hasBothSignals(sessionId)) {
+            generateAndSaveCsvSummary(sessionId);
+        }
+
         return new Signal(signalId, sessionId, timestamp, SignalType.ECG, finalData, parsed.getFs());
     }
 
@@ -514,6 +520,58 @@ public class PatientRepository {
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
                         rs.getBytes("session_file"),
                 sessionId);
+    }
+
+    public void generateAndSaveCsvSummary(Long sessionId) {
+        MeasurementSession session = findSessionsById(sessionId);
+        Patient patient = findById(session.getPatientId());
+        Set<SymptomType> symptoms = findSymptomsBySessionId(sessionId);
+        List<Signal> signals = findSignalsBySessionId(sessionId);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintWriter writer = new PrintWriter(baos, true, StandardCharsets.UTF_8);
+
+        writer.println("Patient Info");
+        writer.printf("Patient ID,%d%n", patient.getPatientId());
+        writer.printf("Full Name,%s %s%n", patient.getName(), patient.getSurname());
+        writer.printf("Gender,%s%n", patient.getGender());
+        writer.printf("Birth Date,%s%n", patient.getBirthDate());
+        writer.println();
+
+        writer.println("Session Info");
+        writer.printf("Session ID,%d%n", session.getSessionId());
+        writer.printf("Timestamp,%s%n", session.getTimeStamp());
+        writer.println();
+
+        writer.println("Symptoms");
+        if (symptoms.isEmpty()) {
+            writer.println("None");
+        } else {
+            for (SymptomType symptom : symptoms) {
+                writer.println(symptom.name());
+            }
+        }
+        writer.println();
+
+        writer.println("Signals");
+        writer.println("Signal Type,Timestamp,Sampling Rate,Data (truncated)");
+
+        for (Signal signal : signals) {
+            String truncatedData = signal.getPatientSignalData();
+            if (truncatedData.length() > 50) {
+                truncatedData = truncatedData.substring(0, 50) + "...";
+            }
+            writer.printf("%s,%s,%d,%s%n",
+                    signal.getSignalType(),
+                    signal.getTimestamp(),
+                    signal.getFs(),
+                    truncatedData);
+        }
+
+        writer.flush();
+        byte[] csvBytes = baos.toByteArray();
+
+        saveCsvSummaryFile(sessionId, csvBytes, "session_summary.csv", "text/csv");
     }
 
     public List<Doctor> getDoctorsForMap(Long patientId) {
@@ -610,5 +668,23 @@ public class PatientRepository {
             throw new IllegalStateException("You must log symptoms before recording signals.");
         }
     }
+
+    /**
+     * This method checks if both signals (ecg and emg) have been uploaded
+     * @param sessionId the id of the session
+     * @return whether both signals have been uploaded or not as a boolean
+     */
+    public boolean hasBothSignals(Long sessionId) {
+        String sql = """
+        SELECT COUNT(DISTINCT signal_type) 
+        FROM signals 
+        WHERE session_id = ? 
+          AND signal_type IN ('EMG', 'ECG')
+        """;
+
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, sessionId);
+        return count != null && count == 2;
+    }
+
 
 }
