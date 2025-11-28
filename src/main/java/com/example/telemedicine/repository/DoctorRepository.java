@@ -292,7 +292,8 @@ public class DoctorRepository {
                         rs.getLong("session_id"),
                         rs.getBytes("file_data"),
                         rs.getString("file_name"),
-                        rs.getString("file_type")
+                        rs.getString("file_type"),
+                        rs.getTimestamp("created_at").toLocalDateTime()
                 );
             }, reportId, doctorId);
         } catch (org.springframework.dao.EmptyResultDataAccessException e) {
@@ -330,15 +331,28 @@ public class DoctorRepository {
 
         jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, locality.getLocalityId());
-            ps.setString(2, locality.getName());
-            ps.setDouble(3, locality.getLatitude());
-            ps.setDouble(4, locality.getLongitude());
+            ps.setString(1, locality.getName());
+            ps.setDouble(2, locality.getLatitude());
+            ps.setDouble(3, locality.getLongitude());
             return ps;
         }, keyHolder);
         Long id = ((Number) keyHolder.getKeys().get("locality_id")).longValue();
         locality.setLocalityId(id);
 
         return locality;
+    }
+
+    public List<Report> getAllReports() {
+        String sql = "SELECT * FROM report ORDER BY created_at DESC";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new Report(
+                rs.getLong("report_id"),
+                rs.getLong("patient_id"),
+                rs.getLong("doctor_id"),
+                rs.getLong("session_id"),
+                rs.getBytes("file_data"),
+                rs.getString("file_name"),
+                rs.getString("file_type"),
+                rs.getTimestamp("created_at").toLocalDateTime()
+        ));
     }
 }

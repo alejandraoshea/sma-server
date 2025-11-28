@@ -103,4 +103,7 @@ public class DoctorService {
         return doctorRepository.insertLocality(locality);
     }
 
+    public List<Report> getReportsByDoctor(Long doctorId) {
+        return doctorRepository.getAllReports();
+    }
 }
