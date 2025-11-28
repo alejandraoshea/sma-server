@@ -65,7 +65,8 @@ public class PatientController {
         String token = authHeader.substring(7);
         Claims claims = jwtService.extractClaims(token);
 
-        if (!claims.get("role").equals(Role.PATIENT.name())) {
+        String role = claims.get("role", String.class);
+        if (!role.equals(Role.PATIENT.name()) && !role.equals(Role.DOCTOR.name())) {
             return ResponseEntity.status(403).body("Forbidden");
         }
 
@@ -89,7 +90,8 @@ public class PatientController {
         String token = authHeader.substring(7);
         Claims claims = jwtService.extractClaims(token);
 
-        if (!claims.get("role").equals(Role.PATIENT.name())) {
+        String role = claims.get("role", String.class);
+        if (!role.equals(Role.PATIENT.name()) && !role.equals(Role.DOCTOR.name())) {
             return ResponseEntity.status(403).body("Forbidden");
         }
 
@@ -206,12 +208,26 @@ public class PatientController {
      *
      * @return list of sessions
      */
-    @GetMapping("/sessions/me")
-    public List<MeasurementSession> getPatientSessions(@RequestHeader("Authorization") String authHeader) {
+    @GetMapping("/sessions/{patientId}")
+    public ResponseEntity<?> getPatientSessions(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long patientId
+    ) {
         String token = authHeader.substring(7);
         Claims claims = jwtService.extractClaims(token);
-        Long patientId = claims.get("patientId", Long.class);
-        return patientService.getSessionsByPatient(patientId);
+        String role = claims.get("role", String.class);
+
+        if (Role.PATIENT.name().equals(role)) {
+            Long jwtPatientId = claims.get("patientId", Long.class);
+            if (!jwtPatientId.equals(patientId)) {
+                return ResponseEntity.status(403).body("Forbidden: cannot access other patients' sessions");
+            }
+        } else if (!Role.DOCTOR.name().equals(role)) {
+            return ResponseEntity.status(403).body("Forbidden");
+        }
+
+        List<MeasurementSession> sessions = patientService.getSessionsByPatient(patientId);
+        return ResponseEntity.ok(sessions);
     }
 
     //al parecer post mapping es mandar datos al servidor
@@ -291,5 +307,4 @@ public class PatientController {
         Long patientId = claims.get("patientId", Long.class);
         return patientService.getDoctorsForMap(patientId);
     }
-
 }

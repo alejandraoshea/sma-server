@@ -57,7 +57,7 @@ public class DoctorRepository {
      * Updates doctor's personal information in the database using SQL.
      *
      * @param doctorId ID of the patient to update
-     * @param newData   Doctor object containing new data (null fields are ignored)
+     * @param newData  Doctor object containing new data (null fields are ignored)
      * @return number of rows updated (should be 1 if successful)
      */
     public int updateDoctorInfo(Long doctorId, Doctor newData) {
@@ -194,46 +194,47 @@ public class DoctorRepository {
 
     public Doctor findDoctorById(Long doctorId) {
         String sql = """
-            SELECT d.doctor_id, d.name, d.surname, d.gender,
-                   l.locality_id, l.name AS name, l.latitude, l.longitude
-            FROM doctors d
-            LEFT JOIN localities l ON d.locality_id = l.locality_id
-            WHERE d.doctor_id = ?
-        """;
+                 SELECT d.doctor_id, d.name, d.surname, d.gender,
+                        l.locality_id, l.name AS localityName, l.latitude, l.longitude
+                 FROM doctors d
+                 LEFT JOIN localities l ON d.locality_id = l.locality_id
+                 WHERE d.doctor_id = ?
+                """;
 
-            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-                Gender gender = null;
-                String genderStr = rs.getString("gender");
-                if (genderStr != null) gender = Gender.valueOf(genderStr);
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            Gender gender = null;
+            String genderStr = rs.getString("gender");
+            if (genderStr != null) gender = Gender.valueOf(genderStr);
 
-                Locality locality = null;
-                if (rs.getObject("locality_id") != null) {
-                    locality = new Locality(
-                            rs.getLong("locality_id"),
-                            rs.getString("name"),
-                            rs.getDouble("latitude"),
-                            rs.getDouble("longitude")
-                    );
-                }
-
-                return new Doctor(
-                        rs.getLong("doctor_id"), rs.getString("name"),
-                        rs.getString("surname"), gender, locality
+            Locality locality = null;
+            if (rs.getObject("locality_id") != null) {
+                locality = new Locality(
+                        rs.getLong("locality_id"),
+                        rs.getString("localityName"),
+                        rs.getDouble("latitude"),
+                        rs.getDouble("longitude")
                 );
-            }, doctorId);
+            }
+
+            return new Doctor(
+                    rs.getLong("doctor_id"), rs.getString("name"),
+                    rs.getString("surname"), gender, locality
+            );
+        }, doctorId);
     }
 
 
     /**
      * This method saves a report as a pdf in the database
+     *
      * @param report the report to be saved
      * @return the report saved
      */
     public Report saveReport(Report report) {
         String sql = """
-            INSERT INTO report (patient_id, doctor_id, session_id, file_name, file_type, file_data)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """;
+                    INSERT INTO report (patient_id, doctor_id, session_id, file_name, file_type, file_data)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """;
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -256,6 +257,7 @@ public class DoctorRepository {
 
     /**
      * This method retrieves the pdf (report) by the report id
+     *
      * @param reportId the id of the report to retrieve
      * @return the report
      */

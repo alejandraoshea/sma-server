@@ -1,6 +1,8 @@
 package com.example.telemedicine.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import org.json.JSONPropertyName;
 
 import java.util.Objects;
 
@@ -11,7 +13,8 @@ public class Locality {
     private Double latitude;
     private Double longitude;
 
-    public Locality() {}
+    public Locality() {
+    }
 
     public Locality(Long localityId, String name, Double latitude, Double longitude) {
         this.localityId = localityId;
