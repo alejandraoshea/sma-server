@@ -594,11 +594,21 @@ public class PatientRepository {
      * @param sessionId the id of the session
      */
     private void ensureSymptomsLogged(Long sessionId) {
-        String sql = "SELECT COUNT(*) FROM session_symptoms WHERE session_id = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, sessionId);
+        String sql = """
+        SELECT CASE 
+            WHEN symptoms IS NOT NULL AND array_length(symptoms, 1) > 0 
+            THEN 1 
+            ELSE 0 
+        END
+        FROM measurement_sessions
+        WHERE session_id = ?
+        """;
 
-        if (count == null || count == 0) {
+        Integer hasSymptoms = jdbcTemplate.queryForObject(sql, Integer.class, sessionId);
+
+        if (hasSymptoms == null || hasSymptoms == 0) {
             throw new IllegalStateException("You must log symptoms before recording signals.");
         }
     }
+
 }
