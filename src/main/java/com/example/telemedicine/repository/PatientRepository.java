@@ -139,7 +139,7 @@ public class PatientRepository {
             Gender gender = (genderStr != null) ? Gender.valueOf(genderStr) : null;
 
             Long localityId = rs.getObject("locality_id") != null ? rs.getLong("locality_id") : null;
-            String localityName = rs.getString("locality_name");
+            String localityName = rs.getString("name");
             Double latitude = rs.getObject("latitude") != null ? rs.getDouble("latitude") : null;
             Double longitude = rs.getObject("longitude") != null ? rs.getDouble("longitude") : null;
 
@@ -514,5 +514,72 @@ public class PatientRepository {
                 sessionId);
     }
 
+    public List<Doctor> getDoctorsForMap(Long patientId) {
+        String sql = """
+            SELECT p.selected_doctor_id, p.doctor_approval_status
+            FROM patients p
+            WHERE p.patient_id = ?
+        """;
 
+        Map<String, Object> patient = jdbcTemplate.queryForMap(sql, patientId);
+
+        Long selectedDoctorId = (Long) patient.get("selected_doctor_id");
+        String statusStr = (String) patient.get("doctor_approval_status");
+        DoctorApprovalStatus status = statusStr != null
+                ? DoctorApprovalStatus.valueOf(statusStr)
+                : null;
+
+        //** Case 1: Patient has NOT selected any doctor → return ALL doctors
+        if (selectedDoctorId == null) {
+            String allDoctorsSql = """
+            SELECT d.doctor_id, d.name, d.surname, d.gender,
+                   l.locality_id, l.name, l.latitude, l.longitude
+            FROM doctors d
+            LEFT JOIN localities l ON d.locality_id = l.locality_id
+        """;
+
+            return jdbcTemplate.query(allDoctorsSql, (rs, rowNum) -> {
+                Locality loc = new Locality(
+                        rs.getLong("locality_id"),
+                        rs.getString("name"),
+                        rs.getDouble("latitude"),
+                        rs.getDouble("longitude")
+                );
+
+                return new Doctor(
+                        rs.getLong("doctor_id"),
+                        rs.getString("name"),
+                        rs.getString("surname"),
+                        Gender.valueOf(rs.getString("gender")),
+                        loc
+                );
+            });
+        }
+
+        //** case 2: Patient requested or approved → return ONLY selected doctor
+        String singleDoctorSql = """
+            SELECT d.doctor_id, d.name, d.surname, d.gender,
+                   l.locality_id, l.name, l.latitude, l.longitude
+            FROM doctors d
+            LEFT JOIN localities l ON d.locality_id = l.locality_id
+            WHERE d.doctor_id = ?
+        """;
+
+        return jdbcTemplate.query(singleDoctorSql, (rs, rowNum) -> {
+            Locality locality = new Locality(
+                    rs.getLong("locality_id"),
+                    rs.getString("name"),
+                    rs.getDouble("latitude"),
+                    rs.getDouble("longitude")
+            );
+
+            return new Doctor(
+                    rs.getLong("doctor_id"),
+                    rs.getString("name"),
+                    rs.getString("surname"),
+                    Gender.valueOf(rs.getString("gender")),
+                    locality
+            );
+        }, selectedDoctorId);
+    }
 }

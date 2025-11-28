@@ -192,5 +192,9 @@ public class PatientService {
         return escaped;
     }
 
+    public List<Doctor> getDoctorsForMap(Long patientId) {
+        return patientRepository.getDoctorsForMap(patientId);
+    }
+
 
 }

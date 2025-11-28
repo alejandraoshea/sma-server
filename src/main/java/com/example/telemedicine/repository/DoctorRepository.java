@@ -195,7 +195,7 @@ public class DoctorRepository {
     public Doctor findDoctorById(Long doctorId) {
         String sql = """
             SELECT d.doctor_id, d.name, d.surname, d.gender,
-                   l.locality_id, l.name AS locality_name, l.latitude, l.longitude
+                   l.locality_id, l.name AS name, l.latitude, l.longitude
             FROM doctors d
             LEFT JOIN localities l ON d.locality_id = l.locality_id
             WHERE d.doctor_id = ?
@@ -210,7 +210,7 @@ public class DoctorRepository {
                 if (rs.getObject("locality_id") != null) {
                     locality = new Locality(
                             rs.getLong("locality_id"),
-                            rs.getString("locality_name"),
+                            rs.getString("name"),
                             rs.getDouble("latitude"),
                             rs.getDouble("longitude")
                     );
@@ -221,7 +221,7 @@ public class DoctorRepository {
                         rs.getString("surname"), gender, locality
                 );
             }, doctorId);
-        }
+    }
 
 
     /**

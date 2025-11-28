@@ -283,4 +283,13 @@ public class PatientController {
 
         return patientService.addECG(file.getBytes(), sessionId);
     }
+
+    @GetMapping("/me/map-doctors")
+    public List<Doctor> getDoctorsForMap(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        Claims claims = jwtService.extractClaims(token);
+        Long patientId = claims.get("patientId", Long.class);
+        return patientService.getDoctorsForMap(patientId);
+    }
+
 }
