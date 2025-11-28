@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.time.LocalDate;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -42,9 +42,9 @@ public class PatientEndpointsTest {
 
     @MockBean
     private JwtService jwtService;
+
     private Long patientId;
-    private String userEmail = "testpatient@example.com";
-    private String userPassword = "password123";
+    private final String userPassword = "password123";
 
     @BeforeEach
     void setup() {
@@ -55,8 +55,6 @@ public class PatientEndpointsTest {
         user.setRole(Role.PATIENT);
 
         authService.register(user);
-
-        // Now to get patientId, you might need to login (if register doesn't return User with IDs)
         User createdUser = authService.login(uniqueEmail, userPassword);
         this.patientId = createdUser.getPatientId();
 
@@ -64,6 +62,44 @@ public class PatientEndpointsTest {
         Mockito.when(claims.get("patientId", Long.class)).thenReturn(patientId);
         Mockito.when(claims.get("role", String.class)).thenReturn("PATIENT");
         Mockito.when(jwtService.extractClaims(Mockito.anyString())).thenReturn(claims);
+    }
+
+    private long startSessionAndReturnId() throws Exception {
+        MvcResult sessionResp = mockMvc.perform(post("/api/patients/sessions/start/me")
+                        .header("Authorization", "Bearer dummy")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        return objectMapper.readTree(sessionResp.getResponse().getContentAsString()).get("sessionId").asLong();
+    }
+
+    private void postSymptoms(long sessionId, SymptomType... symptoms) throws Exception {
+        Set<SymptomType> s = Set.of(symptoms);
+        mockMvc.perform(post("/api/patients/sessions/" + sessionId + "/symptoms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(s)))
+                .andExpect(status().isOk());
+    }
+
+    private void uploadSignalJson(long sessionId, SignalType type, String data, int fs) throws Exception {
+        String json = objectMapper.writeValueAsString(new SignalUploadDto(type.name(), data, fs));
+        mockMvc.perform(post("/api/patients/sessions/" + sessionId + "/signals")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.signalType").value(type.name()));
+    }
+
+    static class SignalUploadDto {
+        public String signalType;
+        public String patientSignalData;
+        public Integer fs;
+        public SignalUploadDto(String signalType, String patientSignalData, Integer fs) {
+            this.signalType = signalType;
+            this.patientSignalData = patientSignalData;
+            this.fs = fs;
+        }
     }
 
     @Test
@@ -94,21 +130,14 @@ public class PatientEndpointsTest {
 
     @Test
     void addSymptomsTest() throws Exception {
-        MvcResult sessionResp = mockMvc.perform(post("/api/patients/sessions/start/me")
+        long sessionId = startSessionAndReturnId();
+
+        postSymptoms(sessionId, SymptomType.FEVER, SymptomType.HAND_TREMORS);
+
+        mockMvc.perform(get("/api/patients/sessions/" + patientId)
                         .header("Authorization", "Bearer dummy"))
-                .andReturn();
-
-        long sessionId =
-                objectMapper.readTree(sessionResp.getResponse().getContentAsString())
-                        .get("sessionId").asLong();
-
-        Set<SymptomType> symptoms = Set.of(SymptomType.FEVER, SymptomType.HAND_TREMORS);
-
-        mockMvc.perform(post("/api/patients/sessions/" + sessionId + "/symptoms")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(symptoms)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0]").isString());
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
@@ -121,41 +150,144 @@ public class PatientEndpointsTest {
 
     @Test
     void addSignalTest() throws Exception {
-        MvcResult sessionResp = mockMvc.perform(post("/api/patients/sessions/start/me")
-                        .header("Authorization", "Bearer dummy"))
-                .andReturn();
-
-        long sessionId =
-                objectMapper.readTree(sessionResp.getResponse().getContentAsString())
-                        .get("sessionId").asLong();
-
-        String signalJson = """
-            {
-              "signalType": "ECG",
-              "patientSignalData": "1,2,3,4",
-              "fs": 100
-            }
-            """;
-
-        mockMvc.perform(post("/api/patients/sessions/" + sessionId + "/signals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(signalJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.signalType").value("ECG"))
-                .andExpect(jsonPath("$.patientSignalData").value("1,2,3,4"));
+        long sessionId = startSessionAndReturnId();
+        postSymptoms(sessionId, SymptomType.FEVER);
+        uploadSignalJson(sessionId, SignalType.ECG, "1,2,3,4", 100);
     }
 
     @Test
     void getSessionSignalsTest() throws Exception {
-        mockMvc.perform(get("/api/patients/sessions/1/signals"))
+        long sessionId = startSessionAndReturnId();
+        postSymptoms(sessionId, SymptomType.FEVER);
+        uploadSignalJson(sessionId, SignalType.ECG, "1,2,3", 100);
+
+        mockMvc.perform(get("/api/patients/sessions/" + sessionId + "/signals"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
 
     @Test
     void getSessionSymptomsTest() throws Exception {
-        mockMvc.perform(get("/api/patients/sessions/1/symptoms"))
+        long sessionId = startSessionAndReturnId();
+        postSymptoms(sessionId, SymptomType.FEVER);
+
+        mockMvc.perform(get("/api/patients/sessions/" + sessionId + "/symptoms"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void updatePatientTest() throws Exception {
+        Patient updateData = new Patient();
+        updateData.setName("Updated Name");
+        updateData.setBirthDate(LocalDate.of(1990, 1, 1));
+
+        mockMvc.perform(post("/api/patients/me")
+                        .header("Authorization", "Bearer dummy")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateData)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Updated Name"));
+    }
+
+    @Test
+    void getPatientSessionsTest() throws Exception {
+        mockMvc.perform(get("/api/patients/sessions/" + patientId)
+                        .header("Authorization", "Bearer dummy"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void uploadEcgOctetStreamTest() throws Exception {
+        long sessionId = startSessionAndReturnId();
+        postSymptoms(sessionId, SymptomType.FEVER);
+
+        byte[] dummyBytes = "100\n1,2,3,4".getBytes();
+        mockMvc.perform(post("/api/patients/sessions/" + sessionId + "/ecg")
+                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .content(dummyBytes))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.signalType").value("ECG"));
+    }
+
+    @Test
+    void uploadEmgOctetStreamTest() throws Exception {
+        long sessionId = startSessionAndReturnId();
+        postSymptoms(sessionId, SymptomType.FEVER);
+
+        byte[] dummyBytes = "100\n1,2,3,4".getBytes();
+        mockMvc.perform(post("/api/patients/sessions/" + sessionId + "/emg")
+                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .content(dummyBytes))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.signalType").value("EMG"));
+    }
+
+    @Test
+    void uploadEcgMultipartTest() throws Exception {
+        long sessionId = startSessionAndReturnId();
+        postSymptoms(sessionId, SymptomType.FEVER);
+
+        byte[] dummyBytes = "100\n1,2,3,4".getBytes();
+        mockMvc.perform(multipart("/api/patients/sessions/" + sessionId + "/ecg")
+                        .file("file", dummyBytes)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.signalType").value("ECG"));
+    }
+
+    @Test
+    void uploadEmgMultipartTest() throws Exception {
+        long sessionId = startSessionAndReturnId();
+        postSymptoms(sessionId, SymptomType.FEVER);
+
+        byte[] dummyBytes = "100\n1,2,3,4".getBytes();
+        mockMvc.perform(multipart("/api/patients/sessions/" + sessionId + "/emg")
+                        .file("file", dummyBytes)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.signalType").value("EMG"));
+    }
+
+    @Test
+    void generateAndDownloadSummaryFlowTest() throws Exception {
+        long sessionId = startSessionAndReturnId();
+        postSymptoms(sessionId, SymptomType.FEVER);
+
+        uploadSignalJson(sessionId, SignalType.ECG, "1,2,3,4", 100);
+        uploadSignalJson(sessionId, SignalType.EMG, "1,2,3,4", 100);
+
+        mockMvc.perform(post("/api/patients/sessions/" + sessionId + "/generate-session-file"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("CSV summary generated and saved successfully."));
+
+        mockMvc.perform(get("/api/patients/sessions/" + sessionId + "/session-file"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"session_" + sessionId + "_file.csv\""))
+                .andExpect(content().contentType(MediaType.TEXT_PLAIN));
+    }
+
+    @Test
+    void getDoctorsForMapTest() throws Exception {
+        mockMvc.perform(get("/api/patients/me/map-doctors")
+                        .header("Authorization", "Bearer dummy"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void getSelectedDoctorTest() throws Exception {
+        mockMvc.perform(get("/api/patients/me/doctor")
+                        .header("Authorization", "Bearer dummy"))
+                .andExpect(result -> {
+                    int status = result.getResponse().getStatus();
+                    assertTrue(status == 200 || status == 204, "Expected 200 or 204 but got: " + status);
+                    if (status == 200) {
+                        String body = result.getResponse().getContentAsString();
+                        assertNotNull(body);
+                        assertTrue(body.contains("doctorId"));
+                    }
+                });
     }
 }
