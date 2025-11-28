@@ -68,16 +68,15 @@ public class DoctorService {
         return doctorRepository.findDoctorById(doctorId);
     }
 
-    public Report generateReport(Long doctorId, Long sessionId) {
+    public Report generateReport(Long doctorId, Long sessionId, String doctorComment) {
         MeasurementSession session = patientRepository.findSessionsById(sessionId);
         Patient patient = patientRepository.findById(session.getPatientId());
         Set<SymptomType> symptoms = patientRepository.findSymptomsBySessionId(sessionId);
         List<Signal> signals = patientRepository.findSignalsBySessionId(sessionId);
-        String doctorComment = "";
 
         byte[] pdfBytes = new byte[0];
         try {
-            pdfBytes = pdfGenerator.generateSessionPDF(patient, session, symptoms, signals);
+            pdfBytes = pdfGenerator.generateSessionPDF(patient, session, symptoms, signals, doctorComment);
         } catch (PdfGeneratorException e) {
             throw new RuntimeException(e);
         }
@@ -98,10 +97,6 @@ public class DoctorService {
 
     public List<Locality> getAllLocalities() {
         return doctorRepository.getAllLocalities();
-    }
-
-    public Locality addLocality(Locality locality) {
-        return doctorRepository.insertLocality(locality);
     }
 
     public List<Report> getReportsByDoctor(Long doctorId) {

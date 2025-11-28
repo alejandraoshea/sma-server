@@ -213,8 +213,8 @@ public class DoctorController {
     public Report generateReport(
             @PathVariable Long doctorId,
             @PathVariable Long sessionId,
-            @RequestHeader("Authorization") String authHeader
-    ) {
+            @RequestParam(required = false) String doctorsComments,
+            @RequestHeader("Authorization") String authHeader) {
         Claims claims = jwtService.extractClaims(authHeader.replace("Bearer ", ""));
         Long tokenDoctorId = claims.get("doctorId", Long.class);
 
@@ -222,7 +222,7 @@ public class DoctorController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot generate reports for other doctors");
         }
 
-        return doctorService.generateReport(doctorId, sessionId);
+        return doctorService.generateReport(doctorId, sessionId, doctorsComments);
     }
 
     @GetMapping("/reports/{reportId}")
@@ -270,11 +270,5 @@ public class DoctorController {
     public List<Locality> getAllLocalities() {
         return doctorService.getAllLocalities();
     }
-
-    @PostMapping("/localities")
-    public Locality addLocality(@RequestBody Locality locality) {
-        return doctorService.addLocality(locality);
-    }
-
 
 }

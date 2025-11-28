@@ -45,7 +45,8 @@ public class PdfGenerator {
      * @return A byte array representing the generated PDF file.
      * @throws PdfGeneratorException If errors occur during the PDF creation.
      */
-    public byte[] generateSessionPDF(Patient patient, MeasurementSession session, Set<SymptomType> symptoms, List<Signal> signals) throws PdfGeneratorException {
+    public byte[] generateSessionPDF(Patient patient, MeasurementSession session, Set<SymptomType> symptoms,
+                                     List<Signal> signals, String doctorComment) throws PdfGeneratorException {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             float marginLeft = 100f;
             float marginRight = 100f;
@@ -62,6 +63,10 @@ public class PdfGenerator {
             addSymptoms(doc, symptoms);
             addSignals(doc, writer, signals);
 
+            if (doctorComment != null && !doctorComment.isBlank()) {
+                addDoctorComments(doc, doctorComment);
+            }
+
             doc.close();
             return baos.toByteArray();
 
@@ -71,7 +76,7 @@ public class PdfGenerator {
     }
 
     private void addDoctorComments(Document doc, String comments) throws DocumentException {
-        Paragraph header = new Paragraph("Doctor's Comments:", HEADER_FONT);
+        Paragraph header = new Paragraph("Doctor's Notes:", HEADER_FONT);
         header.setSpacingBefore(10f);
         header.setSpacingAfter(4f);
         doc.add(header);
@@ -79,12 +84,6 @@ public class PdfGenerator {
         Paragraph commentParagraph = new Paragraph(comments, NORMAL_FONT);
         commentParagraph.setSpacingAfter(10f);
         doc.add(commentParagraph);
-
-        LineSeparator line = new LineSeparator();
-        line.setLineWidth(0.5f);
-        line.setLineColor(BaseColor.GRAY);
-        doc.add(new Chunk(line));
-        doc.add(Chunk.NEWLINE);
     }
 
     /**
@@ -188,6 +187,11 @@ public class PdfGenerator {
                 addSignalChart(doc, writer, signal);
             }
         }
+
+        LineSeparator line = new LineSeparator();
+        line.setLineWidth(0.5f);
+        line.setLineColor(BaseColor.GRAY);
+        doc.add(new Chunk(line));
     }
 
     /**
