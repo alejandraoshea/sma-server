@@ -5,9 +5,21 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Spring MVC, Model View Controller, configuration class for handling CORS
+ * (Cross-Origin Resource Sharing) in the telemedicine application.
+ * Configures which origins, HTTP methods and headers are allowed to access the server
+ * from a web frontend running on a different domain or port.
+ */
 @Configuration
 public class WebConfig {
 
+    /**
+     * Configures CORS mappings for the application.
+     * Allows multiple localhost and HTTPS origins and permits credentials.
+     * Supports CRUD methods such as GET, POST, PUT, DELETE and OPTIONS.
+     * @return WebMvcConfigurer that applies the CORS configuration.
+     */
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {

@@ -7,12 +7,22 @@ import java.io.*;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
-
+/**
+ * Utility class for parsing, converting and filtering biomedical signals.
+ * Includes generic IIR filters, bandpass, notch filters and signal file parsing.
+ */
 public class SignalProcessing {
 
     /**
      * PARA EL SERVIDOR (Spring Boot):
      * Lee los bytes del archivo subido (MultipartFile).
+     */
+    /**
+     * Parses a signal from uploaded bytes into a Signal object
+     * @param fileBytes
+     * @param type could be EMG or ECG
+     * @param measurementSessionId
+     * @return Parsed Signal object.
      */
     public static Signal parseSignalFile(byte[] fileBytes, SignalType type, Long measurementSessionId) {
         try (BufferedReader reader = new BufferedReader(
@@ -24,6 +34,14 @@ public class SignalProcessing {
         }
     }
 
+    /**
+     * Parses a local signal file into a Signal object.
+     * @param filePath
+     * @param type
+     * @param measurementSessionId
+     * @return Parsed Signal object.
+     * @throws IOException If file reading process fails.
+     */
     public static Signal parseLocalSignalFile(String filePath, SignalType type,
                                               Long measurementSessionId) throws IOException {
 
@@ -55,7 +73,11 @@ public class SignalProcessing {
     }
 
     // --- 3. CONVERSORES DE DATOS ---
-
+    /**
+     * Converts a comma-separated string into a double array.
+     * @param dataString Comma-separated numeric string.
+     * @return Array of doubles.
+     */
     public static double[] stringToDoubleArray(String dataString) {
         if (dataString == null || dataString.isBlank()) return new double[0];
         return Arrays.stream(dataString.split(","))
@@ -66,6 +88,15 @@ public class SignalProcessing {
     }
 
     // --- 4. FILTROS MATEMÁTICOS GENÉRICOS (IIRJ) ---
+
+    /**
+     * Converts the raw ADC signal into millivolts.
+     * @param rawSignal
+     * @param vcc Supply voltage.
+     * @param resolution ADC resolution.
+     * @param gain Amplifier gain.
+     * @return Converted signal in millivolts.
+     */
     public static double[] convertToMV(double[] rawSignal, double vcc, int resolution, int gain) {
         // Si tus datos ya vienen en mV o el formato es distinto, ajusta esto
         int bits = 10;
@@ -74,6 +105,15 @@ public class SignalProcessing {
                 .toArray();
     }
 
+    /**
+     * Applies a bandpass IIR filter to the signal.
+     * @param signal Input signal.
+     * @param fs
+     * @param lowcut Low cutoff frequency.
+     * @param highcut High cutoff frequency.
+     * @param order Filter order.
+     * @return Filtered signal.
+     */
     public static double[] bandpassFilter(double[] signal, double fs, double lowcut, double highcut, int order) {
         Butterworth butterworth = new Butterworth();
         double centerFrequency = (lowcut + highcut) / 2.0;
@@ -93,6 +133,14 @@ public class SignalProcessing {
         return backwardFiltered;
     }
 
+    /**
+     * Applies a notch IIR filter to the signal.
+     * @param signal Input signal.
+     * @param fs
+     * @param notchFreq
+     * @param q Quality factor.
+     * @return Filtered signal.
+     */
     public static double[] notchFilter(double[] signal, double fs, double notchFreq, double q) {
         Butterworth butterworth = new Butterworth();
         double width = notchFreq / q;
@@ -110,6 +158,12 @@ public class SignalProcessing {
         }
         return backwardFiltered;
     }
+
+    /**
+     * Converts a double array into a comma-separated string.
+     * @param signal Input signal.
+     * @return Comma-separated string representation of the signal.
+     */
     public static String doubleArrayToString(double[] signal) {
         if (signal == null || signal.length == 0) {
             return "";

@@ -8,6 +8,16 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Spring security configuration for the telemedicine application.
+ * Configures the HTTP security, including:
+ * - Disabling CSRF, Cross-Site request Forgery, protection with POST, PUT or DELETE
+ *   requests at the APIs REST as tokens are used with JWT.
+ * - Permitting requests to certain public endpoints (authentication, patients,
+ *   sessions, doctors, admin).
+ * - Disabling form login and HTTP Basic authentication for the JS frontend requests.
+ * - Requiring authentication for all other requests.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {

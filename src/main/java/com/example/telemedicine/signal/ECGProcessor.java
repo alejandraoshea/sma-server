@@ -12,10 +12,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Provides processing ECG signal methods, including filtering.
+ * QRS complex detection and plotting results.
+ */
 public class ECGProcessor {
 
     /**
      * Aplica filtros específicos para ECG (Pasa-banda 5-15Hz y Notch 60Hz).
+     */
+    /**
+     * Applies bandpass (5-15 Hz) and notch (60 Hz) filters to an ECG signal.
+     * @param signal Input recovered ECG signal.
+     * @param fs Sampling frequency
+     * @return Filtered ECG signal.
      */
     public static double[] applyFilters(double[] signal, double fs) {
         // Llama a la caja de herramientas (SignalUtils)
@@ -25,6 +35,14 @@ public class ECGProcessor {
 
     /**
      * Lógica principal de detección de QRS (Sección 5 de tu práctica).
+     */
+    /**
+     * Detects QRS complexes in a filtered ECG signal.
+     * R-peaks are detected based on the threshold and Q-peaks on the minima
+     * preceding each R-peak.
+     * @param filteredSignal
+     * @param fs
+     * @return signal containing indices of R-peaks and Q-peaks.
      */
     public static QRSResult detectQRSComplexes(double[] filteredSignal, double fs) {
         // 1. Detectar Picos R (los altos)
@@ -59,6 +77,7 @@ public class ECGProcessor {
     }
 
     // Método auxiliar privado para encontrar picos locales
+    //Private helper method for peak detection
     private static List<Integer> findPeaks(double[] signal, double height) {
         List<Integer> peaks = new ArrayList<>();
         for (int i = 1; i < signal.length - 1; i++) {
@@ -70,6 +89,15 @@ public class ECGProcessor {
     }
 
     // --- GRÁFICO (Estilo corregido) ---
+
+    /**
+     * Plots ECG signal and detected Q-peaks.
+     * @param time
+     * @param signal ECG signal to plot.
+     * @param qPeaks Indices of detected Q-peaks.
+     * @param title Chart title.
+     * @param maxTimeSec Maximum time (seconds) to display in the plot.
+     */
     public static void plotECGResults(double[] time, double[] signal, List<Integer> qPeaks, String title, double maxTimeSec) {
         double fs = 1.0 / (time[1] - time[0]);
         int maxSamples = (int) (maxTimeSec * fs);

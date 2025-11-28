@@ -17,7 +17,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-
+/**
+ * Provides static methods for processing EMG signals, including EMG signal
+ * processing, contraction detection, RMS computation and plotting results.
+ */
 public class EMGProcessor {
     /**
      * Filtro de Mediana para suavizar la envolvente.
@@ -67,7 +70,15 @@ public class EMGProcessor {
         return Arrays.copyOfRange(paddedEnvelope, 0, originalLength);
     }
 
-
+    /**
+     * Detects muscle contractions in an EMG signal using Hilbert envelope and median
+     * smoothing.
+     * @param signal
+     * @param fs
+     * @param thresholdRatio Thresholding ratio relative to the maximum envelope amplitude.
+     * @param minDurationSec Minimum duration of a contraction (seconds) to consider.
+     * @return ContractionResult containing onsets, offsets and smoothed enevelope.
+     */
     public static ContractionResult detectContractions(double[] signal, double fs, double thresholdRatio, double minDurationSec) {
         System.out.println("Calculando envolvente de Hilbert...");
         double[] envelope = computeHilbertEnvelope(signal);
@@ -115,6 +126,13 @@ public class EMGProcessor {
         return new ContractionResult(filteredOnsets, filteredOffsets, envelopeSmooth);
     }
 
+    /**
+     * Computes RMS values for detected EMG contractions.
+     * @param signal
+     * @param onsets Start contractions indices.
+     * @param offsets End contractions indices.
+     * @return RmsResult containing RMS values for each contraction and the median RMS.
+     */
     public static RmsResult computeRms(double[] signal, List<Integer> onsets, List<Integer> offsets) {
         List<Double> rmsValues = new ArrayList<>();
         for (int i = 0; i < onsets.size(); i++) {
@@ -134,6 +152,15 @@ public class EMGProcessor {
         return new RmsResult(rmsValues, medianRms);
     }
 
+    /**
+     * Plots EMG signal, envelope and contraction events (onsets and offsets).
+     * @param fs
+     * @param filteredSignal
+     * @param envelope
+     * @param onsets
+     * @param offsets
+     * @param subjectId Subject identifier for the chart title.
+     */
     public static void plotEMGResults(double fs, double[] filteredSignal, double[] envelope, List<Integer> onsets, List<Integer> offsets, String subjectId) {
         double[] time = IntStream.range(0, filteredSignal.length).mapToDouble(i -> i / fs).toArray();
 
