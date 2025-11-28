@@ -532,23 +532,27 @@ public class PatientRepository {
         //** Case 1: Patient has NOT selected any doctor → return ALL doctors
         if (selectedDoctorId == null) {
             String allDoctorsSql = """
-                        SELECT d.doctor_id, d.name, d.surname, d.gender,
-                               l.locality_id, l.name, l.latitude, l.longitude
+                        SELECT d.doctor_id, d.name AS doctor_name, d.surname, d.gender,
+                               l.locality_id, l.name AS locality_name, l.latitude, l.longitude
                         FROM doctors d
                         LEFT JOIN localities l ON d.locality_id = l.locality_id
                     """;
 
             return jdbcTemplate.query(allDoctorsSql, (rs, rowNum) -> {
-                Locality loc = new Locality(
-                        rs.getLong("locality_id"),
-                        rs.getString("name"),
-                        rs.getDouble("latitude"),
-                        rs.getDouble("longitude")
-                );
+                Locality loc = null;
+                Long locId = rs.getObject("locality_id") != null ? rs.getLong("locality_id") : null;
+                if (locId != null) {
+                    loc = new Locality(
+                            locId,
+                            rs.getString("locality_name"),
+                            rs.getObject("latitude") != null ? rs.getDouble("latitude") : null,
+                            rs.getObject("longitude") != null ? rs.getDouble("longitude") : null
+                    );
+                }
 
                 return new Doctor(
                         rs.getLong("doctor_id"),
-                        rs.getString("name"),
+                        rs.getString("doctor_name"),
                         rs.getString("surname"),
                         Gender.valueOf(rs.getString("gender")),
                         loc

@@ -196,5 +196,4 @@ public class PatientService {
         return patientRepository.getDoctorsForMap(patientId);
     }
 
-
 }

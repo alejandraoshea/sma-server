@@ -305,7 +305,7 @@ public class PatientController {
 
     @GetMapping("/me/map-doctors")
     public List<Doctor> getDoctorsForMap(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.substring(7);
+        String token = authHeader.replace("Bearer ", "").trim();
         Claims claims = jwtService.extractClaims(token);
         Long patientId = claims.get("patientId", Long.class);
         return patientService.getDoctorsForMap(patientId);
