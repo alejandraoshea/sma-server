@@ -86,27 +86,26 @@ public class PatientRepository {
                     WHERE patient_id = ?
                 """;
 
-
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-            Patient p = new Patient();
-            p.setPatientId(rs.getLong("patient_id"));
-            p.setUserId(rs.getLong("user_id"));
-            p.setName(rs.getString("name"));
-            p.setSurname(rs.getString("surname"));
+            Patient patient = new Patient();
+            patient.setPatientId(rs.getLong("patient_id"));
+            patient.setUserId(rs.getLong("user_id"));
+            patient.setName(rs.getString("name"));
+            patient.setSurname(rs.getString("surname"));
 
             String genderStr = rs.getString("gender");
-            p.setGender(genderStr != null ? Gender.valueOf(genderStr) : null);
+            patient.setGender(genderStr != null ? Gender.valueOf(genderStr) : null);
 
-            p.setBirthDate(rs.getDate("birth_date") != null ? rs.getDate("birth_date").toLocalDate() : null);
-            p.setHeight(Long.valueOf(rs.getObject("height") != null ? rs.getInt("height") : 0));
-            p.setWeight(rs.getObject("weight") != null ? rs.getInt("weight") : 0);
-            p.setDoctorId(rs.getObject("doctor_id") != null ? rs.getLong("doctor_id") : null);
-            p.setSelectedDoctorId(rs.getObject("selected_doctor_id") != null ? rs.getLong("selected_doctor_id") : null);
+            patient.setBirthDate(rs.getDate("birth_date") != null ? rs.getDate("birth_date").toLocalDate() : null);
+            patient.setHeight(Long.valueOf(rs.getObject("height") != null ? rs.getInt("height") : 0));
+            patient.setWeight(rs.getObject("weight") != null ? rs.getInt("weight") : 0);
+            patient.setDoctorId(rs.getObject("doctor_id") != null ? rs.getLong("doctor_id") : null);
+            patient.setSelectedDoctorId(rs.getObject("selected_doctor_id") != null ? rs.getLong("selected_doctor_id") : null);
 
             String statusStr = rs.getString("doctor_approval_status");
-            p.setDoctorApprovalStatus(statusStr != null ? DoctorApprovalStatus.valueOf(statusStr) : null);
+            patient.setDoctorApprovalStatus(statusStr != null ? DoctorApprovalStatus.valueOf(statusStr) : null);
 
-            return p;
+            return patient;
         }, patientId);
     }
 
@@ -119,20 +118,20 @@ public class PatientRepository {
      */
     public Doctor sendDoctorRequest(Long patientId, Long doctorId) {
         String sql = """
-                UPDATE patients
-                SET selected_doctor_id = ?, doctor_approval_status = 'PENDING'
-                WHERE patient_id = ?
-            """;
+                    UPDATE patients
+                    SET selected_doctor_id = ?, doctor_approval_status = 'PENDING'
+                    WHERE patient_id = ?
+                """;
 
         jdbcTemplate.update(sql, doctorId, patientId);
 
         String docSql = """
-            SELECT d.doctor_id, d.name, d.surname, d.gender,
-                   l.locality_id AS locality_id, l.latitude, l.longitude
-            FROM doctors d
-            LEFT JOIN localities l ON d.locality_id = l.locality_id
-            WHERE d.doctor_id = ?
-        """;
+                    SELECT d.doctor_id, d.name, d.surname, d.gender,
+                           l.locality_id AS locality_id, l.latitude, l.longitude
+                    FROM doctors d
+                    LEFT JOIN localities l ON d.locality_id = l.locality_id
+                    WHERE d.doctor_id = ?
+                """;
 
         return jdbcTemplate.queryForObject(docSql, (rs, rowNum) -> {
             String genderStr = rs.getString("gender");
@@ -278,14 +277,14 @@ public class PatientRepository {
     public List<Signal> findSignalsBySessionId(Long sessionId) {
         String sql = "SELECT signal_id, session_id, time_stamp, patient_data, fs, signal_type FROM signals WHERE session_id = ? ORDER BY time_stamp";
         return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) ->
-             new Signal(
-                    rs.getLong("signal_id"),
-                    rs.getLong("session_id"),
-                    rs.getTimestamp("time_stamp").toLocalDateTime(),
-                    SignalType.valueOf(rs.getString("signal_type")),
-                    rs.getString("patient_data"),
-                    rs.getInt("fs")
-             ));
+                new Signal(
+                        rs.getLong("signal_id"),
+                        rs.getLong("session_id"),
+                        rs.getTimestamp("time_stamp").toLocalDateTime(),
+                        SignalType.valueOf(rs.getString("signal_type")),
+                        rs.getString("patient_data"),
+                        rs.getInt("fs")
+                ));
     }
 
 
@@ -346,6 +345,7 @@ public class PatientRepository {
 
     /**
      * Retrieves a measurement session by its id
+     *
      * @param sessionId The id of the session
      * @return Measurement Session
      */
@@ -500,26 +500,26 @@ public class PatientRepository {
 
     public void saveCsvSummaryFile(Long sessionId, byte[] csvBytes, String filename, String mimeType) {
         String sql = """
-        UPDATE measurement_sessions
-        SET session_file = ?, session_filename = ?, session_mime_type = ? 
-        WHERE session_id = ?
-        """;
+                UPDATE measurement_sessions
+                SET session_file = ?, session_filename = ?, session_mime_type = ? 
+                WHERE session_id = ?
+                """;
         jdbcTemplate.update(sql, csvBytes, filename, mimeType, sessionId);
     }
 
     public byte[] getCsvSummaryFile(Long sessionId) {
         String sql = "SELECT session_file FROM measurement_sessions WHERE session_id = ?";
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
-                rs.getBytes("session_file"),
+                        rs.getBytes("session_file"),
                 sessionId);
     }
 
     public List<Doctor> getDoctorsForMap(Long patientId) {
         String sql = """
-            SELECT p.selected_doctor_id, p.doctor_approval_status
-            FROM patients p
-            WHERE p.patient_id = ?
-        """;
+                    SELECT p.selected_doctor_id, p.doctor_approval_status
+                    FROM patients p
+                    WHERE p.patient_id = ?
+                """;
 
         Map<String, Object> patient = jdbcTemplate.queryForMap(sql, patientId);
 
@@ -532,11 +532,11 @@ public class PatientRepository {
         //** Case 1: Patient has NOT selected any doctor → return ALL doctors
         if (selectedDoctorId == null) {
             String allDoctorsSql = """
-            SELECT d.doctor_id, d.name, d.surname, d.gender,
-                   l.locality_id, l.name, l.latitude, l.longitude
-            FROM doctors d
-            LEFT JOIN localities l ON d.locality_id = l.locality_id
-        """;
+                        SELECT d.doctor_id, d.name, d.surname, d.gender,
+                               l.locality_id, l.name, l.latitude, l.longitude
+                        FROM doctors d
+                        LEFT JOIN localities l ON d.locality_id = l.locality_id
+                    """;
 
             return jdbcTemplate.query(allDoctorsSql, (rs, rowNum) -> {
                 Locality loc = new Locality(
@@ -558,12 +558,12 @@ public class PatientRepository {
 
         //** case 2: Patient requested or approved → return ONLY selected doctor
         String singleDoctorSql = """
-            SELECT d.doctor_id, d.name, d.surname, d.gender,
-                   l.locality_id, l.name, l.latitude, l.longitude
-            FROM doctors d
-            LEFT JOIN localities l ON d.locality_id = l.locality_id
-            WHERE d.doctor_id = ?
-        """;
+                    SELECT d.doctor_id, d.name, d.surname, d.gender,
+                           l.locality_id, l.name, l.latitude, l.longitude
+                    FROM doctors d
+                    LEFT JOIN localities l ON d.locality_id = l.locality_id
+                    WHERE d.doctor_id = ?
+                """;
 
         return jdbcTemplate.query(singleDoctorSql, (rs, rowNum) -> {
             Locality locality = new Locality(
