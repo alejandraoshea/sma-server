@@ -51,14 +51,14 @@ public class PatientService {
      * @return patient object
      */
     public Patient findById(Long patientId) {
-        Patient p = patientRepository.findById(patientId);
+        Patient patient = patientRepository.findById(patientId);
 
-        if (p.getSelectedDoctorId() != null) {
-            Doctor d = doctorRepository.findDoctorById(p.getSelectedDoctorId());
-            p.setSelectedDoctorId(d.getDoctorId());
+        if (patient.getSelectedDoctorId() != null) {
+            Doctor d = doctorRepository.findDoctorById(patient.getSelectedDoctorId());
+            patient.setSelectedDoctorId(d.getDoctorId());
         }
 
-        return p;
+        return patient;
     }
 
     /**
