@@ -2,6 +2,7 @@ package com.example.telemedicine.integration;
 
 import com.example.telemedicine.domain.*;
 import com.example.telemedicine.repository.PatientRepository;
+import com.example.telemedicine.service.AuthService;
 import com.example.telemedicine.security.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
@@ -26,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 public class PatientEndpointsTest {
-/*
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -36,53 +37,43 @@ public class PatientEndpointsTest {
     @Autowired
     private PatientRepository patientRepository;
 
+    @Autowired
+    private AuthService authService;
+
     @MockBean
     private JwtService jwtService;
+    private Long patientId;
+    private String userEmail = "testpatient@example.com";
+    private String userPassword = "password123";
 
     @BeforeEach
     void setup() {
-        Patient p = new Patient();
-        p.setPatientId(1L);
-        p.setName("TestName");
-        p.setSurname("TestSurname");
-        p.setBirthDate(LocalDate.of(2000, 1, 1));
-        p.setHeight(175L);
-        p.setWeight(70.0);
-        patientRepository.updatePatientInfo(1L, p);
+        String uniqueEmail = "testpatient_" + System.currentTimeMillis() + "@example.com";
+        User user = new User();
+        user.setEmail(uniqueEmail);
+        user.setPassword(userPassword);
+        user.setRole(Role.PATIENT);
+
+        authService.register(user);
+
+        // Now to get patientId, you might need to login (if register doesn't return User with IDs)
+        User createdUser = authService.login(uniqueEmail, userPassword);
+        this.patientId = createdUser.getPatientId();
 
         Claims claims = Mockito.mock(Claims.class);
-        Mockito.when(claims.get("patientId", Long.class)).thenReturn(1L);
-        Mockito.when(claims.get("role")).thenReturn("PATIENT");
+        Mockito.when(claims.get("patientId", Long.class)).thenReturn(patientId);
+        Mockito.when(claims.get("role", String.class)).thenReturn("PATIENT");
         Mockito.when(jwtService.extractClaims(Mockito.anyString())).thenReturn(claims);
     }
 
     @Test
     void getPatientByIdTest() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/patients/me")
+        mockMvc.perform(get("/api/patients/me")
                         .header("Authorization", "Bearer dummy")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.patientId").value(1L))
-                .andReturn();
-
-        Patient response = objectMapper.readValue(result.getResponse().getContentAsString(), Patient.class);
-        assertThat(response.getName()).isEqualTo("TestName");
+                .andExpect(jsonPath("$.patientId").value(patientId));
     }
-
-
-    @Test
-    void updatePatientInfoTest() throws Exception {
-        Patient update = new Patient();
-        update.setName("UpdatedName");
-
-        mockMvc.perform(post("/api/patients/me")
-                        .header("Authorization", "Bearer dummy")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(update)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("UpdatedName"));
-    }
-
 
     @Test
     void selectDoctorFromListTest() throws Exception {
@@ -97,13 +88,12 @@ public class PatientEndpointsTest {
         mockMvc.perform(post("/api/patients/sessions/start/me")
                         .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.patientId").value(1L))
+                .andExpect(jsonPath("$.patientId").value(patientId))
                 .andExpect(jsonPath("$.sessionId").isNumber());
     }
 
     @Test
     void addSymptomsTest() throws Exception {
-        // Create a session first
         MvcResult sessionResp = mockMvc.perform(post("/api/patients/sessions/start/me")
                         .header("Authorization", "Bearer dummy"))
                 .andReturn();
@@ -167,5 +157,5 @@ public class PatientEndpointsTest {
         mockMvc.perform(get("/api/patients/sessions/1/symptoms"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
-    }*/
+    }
 }

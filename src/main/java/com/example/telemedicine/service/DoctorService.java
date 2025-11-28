@@ -73,10 +73,11 @@ public class DoctorService {
         Patient patient = patientRepository.findById(session.getPatientId());
         Set<SymptomType> symptoms = patientRepository.findSymptomsBySessionId(sessionId);
         List<Signal> signals = patientRepository.findSignalsBySessionId(sessionId);
+        String doctorComment = "";
 
         byte[] pdfBytes = new byte[0];
         try {
-            pdfBytes = pdfGenerator.generateSessionPDF(patient, session, symptoms, signals);
+            pdfBytes = pdfGenerator.generateSessionPDF(patient, session, symptoms, signals, doctorComment);
         } catch (PdfGeneratorException e) {
             throw new RuntimeException(e);
         }
