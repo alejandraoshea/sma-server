@@ -2,6 +2,7 @@ package com.example.telemedicine.repository;
 
 import com.example.telemedicine.domain.*;
 import com.example.telemedicine.repository.mapper.PatientRowMapper;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -61,6 +62,19 @@ public class DoctorRepository {
      * @return number of rows updated (should be 1 if successful)
      */
     public int updateDoctorInfo(Long doctorId, Doctor newData) {
+        Long localityId = null;
+        if (newData.getLocality() != null && newData.getLocality().getName() != null) {
+            try {
+                localityId = jdbcTemplate.queryForObject(
+                        "SELECT locality_id FROM localities WHERE name = ?",
+                        Long.class,
+                        newData.getLocality().getName()
+                );
+            } catch (EmptyResultDataAccessException e) {
+                e.printStackTrace();
+            }
+        }
+
         String sql = """
                     UPDATE doctors
                     SET
@@ -70,8 +84,6 @@ public class DoctorRepository {
                         locality_id = COALESCE(?, locality_id)
                     WHERE doctor_id = ?
                 """;
-
-        Long localityId = newData.getLocality() != null ? newData.getLocality().getLocalityId() : null;
 
         return jdbcTemplate.update(sql,
                 newData.getName(),
