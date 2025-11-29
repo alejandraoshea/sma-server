@@ -133,7 +133,7 @@ public class PatientRepository {
 
         return jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
             Long localityId = rs.getObject("locality_id") != null ? rs.getLong("locality_id") : null;
-            String localityName = rs.getString("locality_name");
+            String localityName = rs.getString("name");
 
             Double latitude = null;
             Double longitude = null;
@@ -608,29 +608,17 @@ public class PatientRepository {
                 """;
 
             return jdbcTemplate.query(allDoctorsSql, (rs, rowNum) -> {
-                // Handle nullable locality
                 Long locId = rs.getObject("locality_id") != null ? rs.getLong("locality_id") : null;
-                String localityName = rs.getString("locality_name");
+                String localityName = rs.getString("locality_name");  // fixed
 
-                Double latitude = null;
-                Double longitude = null;
-
-                // Check latitude
-                if (rs.getObject("latitude") != null) {
-                    latitude = rs.getDouble("latitude");
-                }
-
-                // Check longitude
-                if (rs.getObject("longitude") != null) {
-                    longitude = rs.getDouble("longitude");
-                }
+                Double latitude = rs.getObject("latitude") != null ? rs.getDouble("latitude") : null;
+                Double longitude = rs.getObject("longitude") != null ? rs.getDouble("longitude") : null;
 
                 Locality locality = null;
                 if (locId != null && localityName != null && latitude != null && longitude != null) {
                     locality = new Locality(locId, localityName, latitude, longitude);
                 }
 
-                // Gender might be null or empty string
                 String genderStr = rs.getString("gender");
                 Gender gender = null;
                 if (genderStr != null && !genderStr.isEmpty()) {
@@ -639,7 +627,7 @@ public class PatientRepository {
 
                 return new Doctor(
                         rs.getLong("doctor_id"),
-                        rs.getString("doctor_name"),
+                        rs.getString("doctor_name"), // keep as is (from alias)
                         rs.getString("surname"),
                         gender,
                         locality
@@ -658,7 +646,7 @@ public class PatientRepository {
 
         return jdbcTemplate.query(singleDoctorSql, (rs, rowNum) -> {
             Long locId = rs.getObject("locality_id") != null ? rs.getLong("locality_id") : null;
-            String localityName = rs.getString("locality_name");
+            String localityName = rs.getString("name");
 
             Double latitude = null;
             Double longitude = null;

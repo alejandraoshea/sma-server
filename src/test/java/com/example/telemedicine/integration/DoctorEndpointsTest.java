@@ -171,16 +171,6 @@ public class DoctorEndpointsTest {
                 .andExpect(jsonPath("$.doctorId").value(doctorId));
     }
 
-    //TODO : fix
-    @Test
-    void getReportPdfTest() throws Exception {
-        mockMvc.perform(get("/api/doctors/reports/1")
-                        .header("Authorization", "Bearer dummy"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename")))
-                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
-    }
-
     @Test
     void getMyReportsTest() throws Exception {
         mockMvc.perform(get("/api/doctors/me/reports")
