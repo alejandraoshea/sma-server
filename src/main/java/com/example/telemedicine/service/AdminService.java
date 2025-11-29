@@ -11,7 +11,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.time.Instant;
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Service responsible for administrative operations on the Telemedicine server.
@@ -55,7 +54,15 @@ public class AdminService {
         if (!password.equals(secretPassword)) return;
 
         System.out.println("Stopping server...");
-        SpringApplication.exit(context, () -> 0);
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {
+            }
+
+            SpringApplication.exit(context, () -> 0);
+        }).start();
     }
 
     /**

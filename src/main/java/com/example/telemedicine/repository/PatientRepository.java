@@ -318,7 +318,6 @@ public class PatientRepository {
         }, sessionId);
     }
 
-
     /**
      * This method gets the measurement history (sessions) for a selected patient
      *
@@ -695,18 +694,19 @@ public class PatientRepository {
 
     /**
      * This method ensures the symptoms are logged before uploading the signals
+     *
      * @param sessionId the id of the session
      */
     private void ensureSymptomsLogged(Long sessionId) {
         String sql = """
-        SELECT CASE 
-            WHEN symptoms IS NOT NULL AND array_length(symptoms, 1) > 0 
-            THEN 1 
-            ELSE 0 
-        END
-        FROM measurement_sessions
-        WHERE session_id = ?
-        """;
+                SELECT CASE 
+                    WHEN symptoms IS NOT NULL AND array_length(symptoms, 1) > 0 
+                    THEN 1 
+                    ELSE 0 
+                END
+                FROM measurement_sessions
+                WHERE session_id = ?
+                """;
 
         Integer hasSymptoms = jdbcTemplate.queryForObject(sql, Integer.class, sessionId);
 
@@ -717,20 +717,47 @@ public class PatientRepository {
 
     /**
      * This method checks if both signals (ecg and emg) have been uploaded
+     *
      * @param sessionId the id of the session
      * @return whether both signals have been uploaded or not as a boolean
      */
     public boolean hasBothSignals(Long sessionId) {
         String sql = """
-        SELECT COUNT(DISTINCT signal_type) 
-        FROM signals 
-        WHERE session_id = ? 
-          AND signal_type IN ('EMG', 'ECG')
-        """;
+                SELECT COUNT(DISTINCT signal_type) 
+                FROM signals 
+                WHERE session_id = ? 
+                  AND signal_type IN ('EMG', 'ECG')
+                """;
 
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, sessionId);
         return count != null && count == 2;
     }
 
+    public List<Report> getAllReports(Long patientId) {
+        String sql = "SELECT * FROM report WHERE patient_id = ? ORDER BY created_at DESC";
+        return jdbcTemplate.query(sql, new Object[]{patientId}, (rs, rowNum) -> new Report(
+                rs.getLong("report_id"),
+                rs.getLong("patient_id"),
+                rs.getLong("doctor_id"),
+                rs.getLong("session_id"),
+                rs.getBytes("file_data"),
+                rs.getString("file_name"),
+                rs.getString("file_type"),
+                rs.getTimestamp("created_at").toLocalDateTime()
+        ));
+    }
 
+    public Report getSingleReport(Long reportId) {
+        String sql = "SELECT * FROM report WHERE report_id = ?";
+        return jdbcTemplate.queryForObject(sql, new Object[]{reportId}, (rs, rowNum) -> new Report(
+                rs.getLong("report_id"),
+                rs.getLong("patient_id"),
+                rs.getLong("doctor_id"),
+                rs.getLong("session_id"),
+                rs.getBytes("file_data"),
+                rs.getString("file_name"),
+                rs.getString("file_type"),
+                rs.getTimestamp("created_at").toLocalDateTime()
+        ));
+    }
 }
