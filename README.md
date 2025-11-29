@@ -10,15 +10,12 @@
   <p align="center">
     Backend server for the SMA Telemedicine Platform. Handles patients, doctors, signals (ECG/EMG), and session management.
     <br />
-    <a href="https://github.com/alejandraoshea/sma-server"><strong>Explore the docs »</strong></a>
     <br />
-    <br />
-    <a href="https://github.com/alejandraoshea/sma-server">View Demo</a>
-    &middot;
     <a href="https://github.com/alejandraoshea/sma-server/issues/new?labels=bug">Report Bug</a>
     &middot;
     <a href="https://github.com/alejandraoshea/sma-server/issues/new?labels=enhancement">Request Feature</a>
-  </p>
+    <br />
+   </p>
 </div>
 
 <details>
@@ -73,26 +70,67 @@ Follow these steps to set up a local development environment.
    git clone https://github.com/alejandraoshea/sma-server.git
    cd sma-server
 
-2. Configure your database in application.properties:
-   ```sh
-   spring.datasource.url=jdbc:postgresql://localhost:5432/sma_db
-   spring.datasource.username=your_db_user
-   spring.datasource.password=your_db_password
+2. Configure your database in application-local.yml:
+   ```yaml
+   spring:
+     config:
+       activate:
+         on-profile: local
+   
+     datasource:
+       url: jdbc:postgresql://localhost:5432/telemedicine_local
+       driver-class-name: org.postgresql.Driver
+       hikari:
+         schema: public
+   
+   server:
+     port: 8443
+     ssl:
+       enabled: true
+       key-store: /path/to/your/keystore.p12
+       key-store-password: YOUR_KEYSTORE_PASSWORD
+       key-store-type: PKCS12
+       key-alias: YOUR_KEY_ALIAS
+   
+   admin:
+     username: ADMIN_USERNAME
+     password: ADMIN_PASSWORD
+   
+   operator:
+     username: OPERATOR_USERNAME
+     password: OPERATOR_PASSWORD
+   
+   jwt:
+     secret: JWT_SECRET
+     expiration: 3600000
 
-3. Build and run the project:
+3. Build the project:
    ```sh
    mvn clean install
-   mvn spring-boot:run
+
+3. Start the server:
+   ```sh
+   mvn clean package
+   scripts/start-server.sh
+   Username: ADMIN_USERNAME
+   Password: ADMIN_PASSWORD
+
+4. Stop the server:
+   ```sh
+   scripts/stop-server.sh
+   Username: ADMIN_USERNAME
+   Password: ADMIN_PASSWORD
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 Usage
-* API endpoints for patients, doctors, sessions, and signals are exposed via REST. 
-* Upload ECG/EMG files to a session to store signals. 
+
+* API endpoints for patients, doctors, sessions, and signals are exposed via REST.
+* Upload ECG/EMG files to a session to store signals.
 * Generate report summaries for patient ECG/EMG measurement sessions.
 * Authentication & authorization (JWT)
-* Implementation of advanced signal analysis 
+* Implementation of advanced signal analysis
 * Integration of notification system for doctor approvals
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -109,8 +147,6 @@ Top contributors:
 License
 
 Distributed under the MIT License.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
