@@ -59,15 +59,7 @@ public class PatientRepository {
                     WHERE patient_id = ?
                 """;
 
-        return jdbcTemplate.update(sql,
-                newData.getName(),
-                newData.getSurname(),
-                newData.getGender() != null ? newData.getGender().name() : null,
-                newData.getBirthDate() != null ? java.sql.Date.valueOf(newData.getBirthDate()) : null,
-                newData.getHeight(),
-                newData.getWeight(),
-                patientId
-        );
+        return jdbcTemplate.update(sql, newData.getName(), newData.getSurname(), newData.getGender() != null ? newData.getGender().name() : null, newData.getBirthDate() != null ? java.sql.Date.valueOf(newData.getBirthDate()) : null, newData.getHeight(), newData.getWeight(), patientId);
     }
 
     /**
@@ -145,13 +137,7 @@ public class PatientRepository {
                 locality = new Locality(localityId, localityName, latitude, longitude);
             }
 
-            Doctor doctor = new Doctor(
-                    rs.getLong("doctor_id"),
-                    rs.getString("name"),
-                    rs.getString("surname"),
-                    gender,
-                    locality
-            );
+            Doctor doctor = new Doctor(rs.getLong("doctor_id"), rs.getString("name"), rs.getString("surname"), gender, locality);
 
             return doctor;
         }, doctorId);
@@ -220,9 +206,7 @@ public class PatientRepository {
                 WHERE session_id = ?
                 """;
 
-        String[] symptomArray = symptoms.stream()
-                .map(Enum::name)
-                .toArray(String[]::new);
+        String[] symptomArray = symptoms.stream().map(Enum::name).toArray(String[]::new);
 
         jdbcTemplate.update(sql, (Object) symptomArray, sessionId);
 
@@ -257,9 +241,7 @@ public class PatientRepository {
             timestamp = LocalDateTime.now();
         }
 
-        jdbcTemplate.update(sql, sessionId, Timestamp.valueOf(timestamp),
-                signal.getSignalType().name(), signal.getPatientSignalData()
-        );
+        jdbcTemplate.update(sql, sessionId, Timestamp.valueOf(timestamp), signal.getSignalType().name(), signal.getPatientSignalData());
 
         signal.setTimestamp(timestamp);
         return signal;
@@ -274,15 +256,7 @@ public class PatientRepository {
      */
     public List<Signal> findSignalsBySessionId(Long sessionId) {
         String sql = "SELECT signal_id, session_id, time_stamp, patient_data, fs, signal_type FROM signals WHERE session_id = ? ORDER BY time_stamp";
-        return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) ->
-                new Signal(
-                        rs.getLong("signal_id"),
-                        rs.getLong("session_id"),
-                        rs.getTimestamp("time_stamp").toLocalDateTime(),
-                        SignalType.valueOf(rs.getString("signal_type")),
-                        rs.getString("patient_data"),
-                        rs.getInt("fs")
-                ));
+        return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) -> new Signal(rs.getLong("signal_id"), rs.getLong("session_id"), rs.getTimestamp("time_stamp").toLocalDateTime(), SignalType.valueOf(rs.getString("signal_type")), rs.getString("patient_data"), rs.getInt("fs")));
     }
 
 
@@ -516,9 +490,7 @@ public class PatientRepository {
 
     public byte[] getCsvSummaryFile(Long sessionId) {
         String sql = "SELECT session_file FROM measurement_sessions WHERE session_id = ?";
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
-                        rs.getBytes("session_file"),
-                sessionId);
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> rs.getBytes("session_file"), sessionId);
     }
 
     public void generateAndSaveCsvSummary(Long sessionId) {
@@ -560,11 +532,7 @@ public class PatientRepository {
             if (truncatedData.length() > 50) {
                 truncatedData = truncatedData.substring(0, 50) + "...";
             }
-            writer.printf("%s,%s,%d,%s%n",
-                    signal.getSignalType(),
-                    signal.getTimestamp(),
-                    signal.getFs(),
-                    truncatedData);
+            writer.printf("%s,%s,%d,%s%n", signal.getSignalType(), signal.getTimestamp(), signal.getFs(), truncatedData);
         }
 
         writer.flush();
@@ -584,9 +552,7 @@ public class PatientRepository {
 
         Long selectedDoctorId = (Long) patient.get("selected_doctor_id");
         String statusStr = (String) patient.get("doctor_approval_status");
-        DoctorApprovalStatus status = statusStr != null
-                ? DoctorApprovalStatus.valueOf(statusStr)
-                : null;
+        DoctorApprovalStatus status = statusStr != null ? DoctorApprovalStatus.valueOf(statusStr) : null;
 
         //** Case 1: Patient has NOT selected any doctor → return ALL doctors
         if (selectedDoctorId == null) {
@@ -601,21 +567,13 @@ public class PatientRepository {
                 Locality loc = null;
                 Long locId = rs.getObject("locality_id") != null ? rs.getLong("locality_id") : null;
                 if (locId != null) {
-                    loc = new Locality(
-                            locId,
-                            rs.getString("locality_name"),
-                            rs.getObject("latitude") != null ? rs.getDouble("latitude") : null,
-                            rs.getObject("longitude") != null ? rs.getDouble("longitude") : null
-                    );
+                    loc = new Locality(locId, rs.getString("locality_name"), rs.getObject("latitude") != null ? rs.getDouble("latitude") : null, rs.getObject("longitude") != null ? rs.getDouble("longitude") : null);
                 }
 
-                return new Doctor(
-                        rs.getLong("doctor_id"),
-                        rs.getString("doctor_name"),
-                        rs.getString("surname"),
-                        Gender.valueOf(rs.getString("gender")),
-                        loc
-                );
+                String genderStr = rs.getString("gender");
+                Gender gender = genderStr != null ? Gender.valueOf(genderStr) : null;
+
+                return new Doctor(rs.getLong("doctor_id"), rs.getString("doctor_name"), rs.getString("surname"), gender, loc);
             });
         }
 
@@ -629,20 +587,12 @@ public class PatientRepository {
                 """;
 
         return jdbcTemplate.query(singleDoctorSql, (rs, rowNum) -> {
-            Locality locality = new Locality(
-                    rs.getLong("locality_id"),
-                    rs.getString("name"),
-                    rs.getDouble("latitude"),
-                    rs.getDouble("longitude")
-            );
+            Locality locality = new Locality(rs.getLong("locality_id"), rs.getString("name"), rs.getDouble("latitude"), rs.getDouble("longitude"));
 
-            return new Doctor(
-                    rs.getLong("doctor_id"),
-                    rs.getString("name"),
-                    rs.getString("surname"),
-                    Gender.valueOf(rs.getString("gender")),
-                    locality
-            );
+            String genderStr = rs.getString("gender");
+            Gender gender = genderStr != null ? Gender.valueOf(genderStr) : null;
+
+            return new Doctor(rs.getLong("doctor_id"), rs.getString("name"), rs.getString("surname"), gender, locality);
         }, selectedDoctorId);
     }
 
@@ -689,29 +639,11 @@ public class PatientRepository {
 
     public List<Report> getAllReports(Long patientId) {
         String sql = "SELECT * FROM report WHERE patient_id = ? ORDER BY created_at DESC";
-        return jdbcTemplate.query(sql, new Object[]{patientId}, (rs, rowNum) -> new Report(
-                rs.getLong("report_id"),
-                rs.getLong("patient_id"),
-                rs.getLong("doctor_id"),
-                rs.getLong("session_id"),
-                rs.getBytes("file_data"),
-                rs.getString("file_name"),
-                rs.getString("file_type"),
-                rs.getTimestamp("created_at").toLocalDateTime()
-        ));
+        return jdbcTemplate.query(sql, new Object[]{patientId}, (rs, rowNum) -> new Report(rs.getLong("report_id"), rs.getLong("patient_id"), rs.getLong("doctor_id"), rs.getLong("session_id"), rs.getBytes("file_data"), rs.getString("file_name"), rs.getString("file_type"), rs.getTimestamp("created_at").toLocalDateTime()));
     }
 
     public Report getSingleReport(Long reportId) {
         String sql = "SELECT * FROM report WHERE report_id = ?";
-        return jdbcTemplate.queryForObject(sql, new Object[]{reportId}, (rs, rowNum) -> new Report(
-                rs.getLong("report_id"),
-                rs.getLong("patient_id"),
-                rs.getLong("doctor_id"),
-                rs.getLong("session_id"),
-                rs.getBytes("file_data"),
-                rs.getString("file_name"),
-                rs.getString("file_type"),
-                rs.getTimestamp("created_at").toLocalDateTime()
-        ));
+        return jdbcTemplate.queryForObject(sql, new Object[]{reportId}, (rs, rowNum) -> new Report(rs.getLong("report_id"), rs.getLong("patient_id"), rs.getLong("doctor_id"), rs.getLong("session_id"), rs.getBytes("file_data"), rs.getString("file_name"), rs.getString("file_type"), rs.getTimestamp("created_at").toLocalDateTime()));
     }
 }
