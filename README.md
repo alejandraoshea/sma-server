@@ -88,35 +88,14 @@ Follow these steps to set up a local development environment.
 
 
 Usage
-• API endpoints for patients, doctors, sessions, and signals are exposed via REST.
-• Upload ECG/EMG files to a session to store signals.
-• Generate CSV summaries for measurement sessions.
-
-For detailed API usage, refer to the /docs folder (if available) or Swagger UI.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-Roadmap
-• Add authentication & authorization (JWT)
-• Implement advanced signal analytics
-• Integrate notification system for doctor approvals
-• Expand reporting system
-
-See the open issues￼ for full details.
+* API endpoints for patients, doctors, sessions, and signals are exposed via REST. 
+* Upload ECG/EMG files to a session to store signals. 
+* Generate report summaries for patient ECG/EMG measurement sessions.
+* Authentication & authorization (JWT)
+* Implementation of advanced signal analysis 
+* Integration of notification system for doctor approvals
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-Contributing
-
-Contributions make the project better!
-
-1. Fork the repo
-2. Create your feature branch (git checkout -b feature/AmazingFeature)
-3. Commit your changes (git commit -m 'Add some AmazingFeature')
-4. Push to the branch (git push origin feature/AmazingFeature)
-5. Open a Pull Request
 
 Top contributors:
 
@@ -127,10 +106,9 @@ Top contributors:
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 License
 
-Distributed under the MIT License. See LICENSE.txt for more information.
+Distributed under the MIT License.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -144,8 +122,3 @@ Acknowledgments
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-<!-- MARKDOWN LINKS & IMAGES -->
-
-
----
