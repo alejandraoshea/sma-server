@@ -55,7 +55,15 @@ public class AdminService {
         if (!password.equals(secretPassword)) return;
 
         System.out.println("Stopping server...");
-        SpringApplication.exit(context, () -> 0);
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {
+            }
+
+            SpringApplication.exit(context, () -> 0);
+        }).start();
     }
 
     /**

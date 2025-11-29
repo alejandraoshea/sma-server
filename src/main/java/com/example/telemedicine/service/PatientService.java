@@ -196,4 +196,11 @@ public class PatientService {
         return patientRepository.getDoctorsForMap(patientId);
     }
 
+    public List<Report> findReportsByPatientId(Long patientId) {
+        return patientRepository.getAllReports(patientId);
+    }
+
+    public Report findReportByReportId(Long reportId){
+        return patientRepository.getSingleReport(reportId);
+    }
 }
