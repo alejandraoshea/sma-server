@@ -61,7 +61,8 @@ Follow these steps to set up a local development environment.
 
 - Java 17+
 - Maven
-- PostgreSQL database
+- PostgreSQL
+- PostgreSQL Database
 
 ### Installation
 
@@ -152,9 +153,9 @@ Distributed under the MIT License.
 
 
 Acknowledgments
-• Best README Template￼
-• Contrib.rocks for contributors graph￼
-• Spring Boot Documentation￼
+* Best README Template
+* Contrib.rocks for contributors graph
+* Spring Boot Documentation
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
