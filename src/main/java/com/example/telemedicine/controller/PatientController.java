@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -37,8 +36,6 @@ public class PatientController {
         this.jwtService = jwtService;
         this.patientRepository = patientRepository;
     }
-
-    //** CRUD and see all sessions
 
     /**
      * Submits a request for a patient to connect with a doctor
@@ -209,11 +206,6 @@ public class PatientController {
         List<MeasurementSession> sessions = patientService.getSessionsByPatient(patientId);
         return ResponseEntity.ok(sessions);
     }
-
-    //al parecer post mapping es mandar datos al servidor
-    //si hay varios patients no diferencia entre patients potque no tienen el patient ID,
-    // habría que mandar el patient ID al client cuando empiece la conxión para poder mandar información
-    // diferenciada al server no?????
 
     /**
      * Handles ECG file upload (binary format)

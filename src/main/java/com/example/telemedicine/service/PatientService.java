@@ -200,7 +200,7 @@ public class PatientService {
         return patientRepository.getAllReports(patientId);
     }
 
-    public Report findReportByReportId(Long reportId){
+    public Report findReportByReportId(Long reportId) {
         return patientRepository.getSingleReport(reportId);
     }
 }

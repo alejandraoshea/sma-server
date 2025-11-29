@@ -2,15 +2,11 @@ package com.example.telemedicine.controller;
 
 import com.example.telemedicine.domain.*;
 
-import com.example.telemedicine.exceptions.PdfGeneratorException;
 import com.example.telemedicine.repository.DoctorRepository;
 import com.example.telemedicine.security.JwtService;
 import com.example.telemedicine.service.PatientService;
 import io.jsonwebtoken.Claims;
-import org.springframework.cglib.core.Local;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import com.example.telemedicine.service.PatientService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
