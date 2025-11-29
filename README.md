@@ -25,10 +25,8 @@
     <li><a href="#built-with">Built With</a></li>
     <li><a href="#getting-started">Getting Started</a></li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
@@ -109,14 +107,14 @@ Follow these steps to set up a local development environment.
    ```sh
    mvn clean install
 
-3. Start the server:
+4. Start the server:
    ```sh
    mvn clean package
    scripts/start-server.sh
    Username: ADMIN_USERNAME
    Password: ADMIN_PASSWORD
 
-4. Stop the server:
+5. Stop the server:
    ```sh
    scripts/stop-server.sh
    Username: ADMIN_USERNAME
@@ -153,6 +151,7 @@ Distributed under the MIT License.
 
 
 Acknowledgments
+
 * Best README Template
 * Contrib.rocks for contributors graph
 * Spring Boot Documentation
