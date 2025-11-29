@@ -59,7 +59,15 @@ public class PatientRepository {
                     WHERE patient_id = ?
                 """;
 
-        return jdbcTemplate.update(sql, newData.getName(), newData.getSurname(), newData.getGender() != null ? newData.getGender().name() : null, newData.getBirthDate() != null ? java.sql.Date.valueOf(newData.getBirthDate()) : null, newData.getHeight(), newData.getWeight(), patientId);
+        return jdbcTemplate.update(sql,
+                newData.getName(),
+                newData.getSurname(),
+                newData.getGender() != null ? newData.getGender().name() : null,
+                newData.getBirthDate() != null ? java.sql.Date.valueOf(newData.getBirthDate()) : null,
+                newData.getHeight(),
+                newData.getWeight(),
+                patientId
+        );
     }
 
     /**
@@ -107,41 +115,57 @@ public class PatientRepository {
      * @return The doctor object that was assigned.
      */
     public Doctor sendDoctorRequest(Long patientId, Long doctorId) {
-        String sql = """
-                    UPDATE patients
-                    SET selected_doctor_id = ?, doctor_approval_status = 'PENDING'
-                    WHERE patient_id = ?
-                """;
+        String updateSql = """
+                UPDATE patients
+                SET selected_doctor_id = ?, doctor_approval_status = 'PENDING'
+                WHERE patient_id = ?
+            """;
 
-        jdbcTemplate.update(sql, doctorId, patientId);
+        jdbcTemplate.update(updateSql, doctorId, patientId);
 
-        String docSql = """
-                    SELECT d.doctor_id, d.name, d.surname, d.gender,
-                           l.locality_id AS locality_id, l.latitude, l.longitude
-                    FROM doctors d
-                    LEFT JOIN localities l ON d.locality_id = l.locality_id
-                    WHERE d.doctor_id = ?
-                """;
+        String selectSql = """
+                SELECT d.doctor_id, d.name, d.surname, d.gender,
+                       l.locality_id, l.name AS locality_name, l.latitude, l.longitude
+                FROM doctors d
+                LEFT JOIN localities l ON d.locality_id = l.locality_id
+                WHERE d.doctor_id = ?
+            """;
 
-        return jdbcTemplate.queryForObject(docSql, (rs, rowNum) -> {
-            String genderStr = rs.getString("gender");
-            Gender gender = (genderStr != null) ? Gender.valueOf(genderStr) : null;
-
+        return jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
             Long localityId = rs.getObject("locality_id") != null ? rs.getLong("locality_id") : null;
-            String localityName = rs.getString("name");
-            Double latitude = rs.getObject("latitude") != null ? rs.getDouble("latitude") : null;
-            Double longitude = rs.getObject("longitude") != null ? rs.getDouble("longitude") : null;
+            String localityName = rs.getString("locality_name");
+
+            Double latitude = null;
+            Double longitude = null;
+
+            if (rs.getObject("latitude") != null) {
+                latitude = rs.getDouble("latitude");
+            }
+            if (rs.getObject("longitude") != null) {
+                longitude = rs.getDouble("longitude");
+            }
 
             Locality locality = null;
-            if (localityId != null) {
+            if (localityId != null && localityName != null && latitude != null && longitude != null) {
                 locality = new Locality(localityId, localityName, latitude, longitude);
             }
 
-            Doctor doctor = new Doctor(rs.getLong("doctor_id"), rs.getString("name"), rs.getString("surname"), gender, locality);
+            String genderStr = rs.getString("gender");
+            Gender gender = null;
+            if (genderStr != null && !genderStr.isEmpty()) {
+                gender = Gender.valueOf(genderStr);
+            }
 
-            return doctor;
+            return new Doctor(
+                    rs.getLong("doctor_id"),
+                    rs.getString("name"),
+                    rs.getString("surname"),
+                    gender,
+                    locality
+            );
         }, doctorId);
     }
+
 
 
     /**
@@ -206,7 +230,9 @@ public class PatientRepository {
                 WHERE session_id = ?
                 """;
 
-        String[] symptomArray = symptoms.stream().map(Enum::name).toArray(String[]::new);
+        String[] symptomArray = symptoms.stream()
+                .map(Enum::name)
+                .toArray(String[]::new);
 
         jdbcTemplate.update(sql, (Object) symptomArray, sessionId);
 
@@ -241,7 +267,9 @@ public class PatientRepository {
             timestamp = LocalDateTime.now();
         }
 
-        jdbcTemplate.update(sql, sessionId, Timestamp.valueOf(timestamp), signal.getSignalType().name(), signal.getPatientSignalData());
+        jdbcTemplate.update(sql, sessionId, Timestamp.valueOf(timestamp),
+                signal.getSignalType().name(), signal.getPatientSignalData()
+        );
 
         signal.setTimestamp(timestamp);
         return signal;
@@ -256,7 +284,15 @@ public class PatientRepository {
      */
     public List<Signal> findSignalsBySessionId(Long sessionId) {
         String sql = "SELECT signal_id, session_id, time_stamp, patient_data, fs, signal_type FROM signals WHERE session_id = ? ORDER BY time_stamp";
-        return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) -> new Signal(rs.getLong("signal_id"), rs.getLong("session_id"), rs.getTimestamp("time_stamp").toLocalDateTime(), SignalType.valueOf(rs.getString("signal_type")), rs.getString("patient_data"), rs.getInt("fs")));
+        return jdbcTemplate.query(sql, new Object[]{sessionId}, (rs, rowNum) ->
+                new Signal(
+                        rs.getLong("signal_id"),
+                        rs.getLong("session_id"),
+                        rs.getTimestamp("time_stamp").toLocalDateTime(),
+                        SignalType.valueOf(rs.getString("signal_type")),
+                        rs.getString("patient_data"),
+                        rs.getInt("fs")
+                ));
     }
 
 
@@ -490,7 +526,9 @@ public class PatientRepository {
 
     public byte[] getCsvSummaryFile(Long sessionId) {
         String sql = "SELECT session_file FROM measurement_sessions WHERE session_id = ?";
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> rs.getBytes("session_file"), sessionId);
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
+                        rs.getBytes("session_file"),
+                sessionId);
     }
 
     public void generateAndSaveCsvSummary(Long sessionId) {
@@ -532,7 +570,11 @@ public class PatientRepository {
             if (truncatedData.length() > 50) {
                 truncatedData = truncatedData.substring(0, 50) + "...";
             }
-            writer.printf("%s,%s,%d,%s%n", signal.getSignalType(), signal.getTimestamp(), signal.getFs(), truncatedData);
+            writer.printf("%s,%s,%d,%s%n",
+                    signal.getSignalType(),
+                    signal.getTimestamp(),
+                    signal.getFs(),
+                    truncatedData);
         }
 
         writer.flush();
@@ -543,58 +585,112 @@ public class PatientRepository {
 
     public List<Doctor> getDoctorsForMap(Long patientId) {
         String sql = """
-                    SELECT p.selected_doctor_id, p.doctor_approval_status
-                    FROM patients p
-                    WHERE p.patient_id = ?
-                """;
+                SELECT p.selected_doctor_id, p.doctor_approval_status
+                FROM patients p
+                WHERE p.patient_id = ?
+            """;
 
         Map<String, Object> patient = jdbcTemplate.queryForMap(sql, patientId);
 
         Long selectedDoctorId = (Long) patient.get("selected_doctor_id");
         String statusStr = (String) patient.get("doctor_approval_status");
-        DoctorApprovalStatus status = statusStr != null ? DoctorApprovalStatus.valueOf(statusStr) : null;
+        DoctorApprovalStatus status = statusStr != null
+                ? DoctorApprovalStatus.valueOf(statusStr)
+                : null;
 
-        //** Case 1: Patient has NOT selected any doctor → return ALL doctors
+        // Case 1: Patient has NOT selected any doctor → return ALL doctors
         if (selectedDoctorId == null) {
             String allDoctorsSql = """
-                        SELECT d.doctor_id, d.name AS doctor_name, d.surname, d.gender,
-                               l.locality_id, l.name AS locality_name, l.latitude, l.longitude
-                        FROM doctors d
-                        LEFT JOIN localities l ON d.locality_id = l.locality_id
-                    """;
+                    SELECT d.doctor_id, d.name AS doctor_name, d.surname, d.gender,
+                           l.locality_id, l.name AS locality_name, l.latitude, l.longitude
+                    FROM doctors d
+                    LEFT JOIN localities l ON d.locality_id = l.locality_id
+                """;
 
             return jdbcTemplate.query(allDoctorsSql, (rs, rowNum) -> {
-                Locality loc = null;
+                // Handle nullable locality
                 Long locId = rs.getObject("locality_id") != null ? rs.getLong("locality_id") : null;
-                if (locId != null) {
-                    loc = new Locality(locId, rs.getString("locality_name"), rs.getObject("latitude") != null ? rs.getDouble("latitude") : null, rs.getObject("longitude") != null ? rs.getDouble("longitude") : null);
+                String localityName = rs.getString("locality_name");
+
+                Double latitude = null;
+                Double longitude = null;
+
+                // Check latitude
+                if (rs.getObject("latitude") != null) {
+                    latitude = rs.getDouble("latitude");
                 }
 
-                String genderStr = rs.getString("gender");
-                Gender gender = genderStr != null ? Gender.valueOf(genderStr) : null;
+                // Check longitude
+                if (rs.getObject("longitude") != null) {
+                    longitude = rs.getDouble("longitude");
+                }
 
-                return new Doctor(rs.getLong("doctor_id"), rs.getString("doctor_name"), rs.getString("surname"), gender, loc);
+                Locality locality = null;
+                if (locId != null && localityName != null && latitude != null && longitude != null) {
+                    locality = new Locality(locId, localityName, latitude, longitude);
+                }
+
+                // Gender might be null or empty string
+                String genderStr = rs.getString("gender");
+                Gender gender = null;
+                if (genderStr != null && !genderStr.isEmpty()) {
+                    gender = Gender.valueOf(genderStr);
+                }
+
+                return new Doctor(
+                        rs.getLong("doctor_id"),
+                        rs.getString("doctor_name"),
+                        rs.getString("surname"),
+                        gender,
+                        locality
+                );
             });
         }
 
-        //** case 2: Patient requested or approved → return ONLY selected doctor
+        // Case 2: Patient requested or approved → return ONLY selected doctor
         String singleDoctorSql = """
-                    SELECT d.doctor_id, d.name, d.surname, d.gender,
-                           l.locality_id, l.name, l.latitude, l.longitude
-                    FROM doctors d
-                    LEFT JOIN localities l ON d.locality_id = l.locality_id
-                    WHERE d.doctor_id = ?
-                """;
+                SELECT d.doctor_id, d.name, d.surname, d.gender,
+                       l.locality_id, l.name AS locality_name, l.latitude, l.longitude
+                FROM doctors d
+                LEFT JOIN localities l ON d.locality_id = l.locality_id
+                WHERE d.doctor_id = ?
+            """;
 
         return jdbcTemplate.query(singleDoctorSql, (rs, rowNum) -> {
-            Locality locality = new Locality(rs.getLong("locality_id"), rs.getString("name"), rs.getDouble("latitude"), rs.getDouble("longitude"));
+            Long locId = rs.getObject("locality_id") != null ? rs.getLong("locality_id") : null;
+            String localityName = rs.getString("locality_name");
+
+            Double latitude = null;
+            Double longitude = null;
+
+            if (rs.getObject("latitude") != null) {
+                latitude = rs.getDouble("latitude");
+            }
+            if (rs.getObject("longitude") != null) {
+                longitude = rs.getDouble("longitude");
+            }
+
+            Locality locality = null;
+            if (locId != null && localityName != null && latitude != null && longitude != null) {
+                locality = new Locality(locId, localityName, latitude, longitude);
+            }
 
             String genderStr = rs.getString("gender");
-            Gender gender = genderStr != null ? Gender.valueOf(genderStr) : null;
+            Gender gender = null;
+            if (genderStr != null && !genderStr.isEmpty()) {
+                gender = Gender.valueOf(genderStr);
+            }
 
-            return new Doctor(rs.getLong("doctor_id"), rs.getString("name"), rs.getString("surname"), gender, locality);
+            return new Doctor(
+                    rs.getLong("doctor_id"),
+                    rs.getString("name"),
+                    rs.getString("surname"),
+                    gender,
+                    locality
+            );
         }, selectedDoctorId);
     }
+
 
     /**
      * This method ensures the symptoms are logged before uploading the signals
@@ -639,11 +735,29 @@ public class PatientRepository {
 
     public List<Report> getAllReports(Long patientId) {
         String sql = "SELECT * FROM report WHERE patient_id = ? ORDER BY created_at DESC";
-        return jdbcTemplate.query(sql, new Object[]{patientId}, (rs, rowNum) -> new Report(rs.getLong("report_id"), rs.getLong("patient_id"), rs.getLong("doctor_id"), rs.getLong("session_id"), rs.getBytes("file_data"), rs.getString("file_name"), rs.getString("file_type"), rs.getTimestamp("created_at").toLocalDateTime()));
+        return jdbcTemplate.query(sql, new Object[]{patientId}, (rs, rowNum) -> new Report(
+                rs.getLong("report_id"),
+                rs.getLong("patient_id"),
+                rs.getLong("doctor_id"),
+                rs.getLong("session_id"),
+                rs.getBytes("file_data"),
+                rs.getString("file_name"),
+                rs.getString("file_type"),
+                rs.getTimestamp("created_at").toLocalDateTime()
+        ));
     }
 
     public Report getSingleReport(Long reportId) {
         String sql = "SELECT * FROM report WHERE report_id = ?";
-        return jdbcTemplate.queryForObject(sql, new Object[]{reportId}, (rs, rowNum) -> new Report(rs.getLong("report_id"), rs.getLong("patient_id"), rs.getLong("doctor_id"), rs.getLong("session_id"), rs.getBytes("file_data"), rs.getString("file_name"), rs.getString("file_type"), rs.getTimestamp("created_at").toLocalDateTime()));
+        return jdbcTemplate.queryForObject(sql, new Object[]{reportId}, (rs, rowNum) -> new Report(
+                rs.getLong("report_id"),
+                rs.getLong("patient_id"),
+                rs.getLong("doctor_id"),
+                rs.getLong("session_id"),
+                rs.getBytes("file_data"),
+                rs.getString("file_name"),
+                rs.getString("file_type"),
+                rs.getTimestamp("created_at").toLocalDateTime()
+        ));
     }
 }
