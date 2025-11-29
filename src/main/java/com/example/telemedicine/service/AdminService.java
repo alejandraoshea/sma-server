@@ -11,7 +11,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.time.Instant;
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Service responsible for administrative operations on the Telemedicine server.
