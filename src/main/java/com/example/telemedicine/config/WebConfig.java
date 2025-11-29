@@ -41,7 +41,8 @@ public class WebConfig {
                                 "https://localhost:5501",
                                 "https://127.0.0.1:8443",
                                 "https://localhost:8443",
-                                "https://127.0.0.1:5501"
+                                "https://127.0.0.1:5501",
+                                "https://localhost:63342"
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")

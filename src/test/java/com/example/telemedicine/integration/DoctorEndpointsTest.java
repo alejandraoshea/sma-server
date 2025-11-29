@@ -1,7 +1,9 @@
 package com.example.telemedicine.integration;
 
-import com.example.telemedicine.repository.DoctorRepository;
+import com.example.telemedicine.domain.*;
 import com.example.telemedicine.security.JwtService;
+import com.example.telemedicine.service.AuthService;
+import com.example.telemedicine.service.DoctorService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,162 +14,186 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDate;
+import java.util.List;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class DoctorEndpointsTest {
-    //TODO: change to last generated id so that they always pass
-/*
+public class DoctorEndpointsTest {
+
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    private DoctorRepository doctorRepository;
-
-    @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private AuthService authService;
+
+    @Autowired
+    private DoctorService doctorService;
 
     @MockBean
     private JwtService jwtService;
 
+    private Long doctorId;
+    private String email = "testdoctor@example.com";
+    private String password = "password123";
+
     @BeforeEach
     void setup() {
-        jdbcTemplate.update("DELETE FROM report WHERE doctor_id = 5 OR patient_id IN (8, 9,10)");
-        jdbcTemplate.update("DELETE FROM measurement_sessions WHERE patient_id IN (8, 9,10)");
-        jdbcTemplate.update("DELETE FROM patients WHERE patient_id IN (8, 9,10)");
-        jdbcTemplate.update("DELETE FROM doctors WHERE doctor_id = 5");
-        jdbcTemplate.update("DELETE FROM app_users WHERE user_id IN (200, 201, 150, 202)");
+        String uniqueEmail = "doctor_" + System.currentTimeMillis() + "@example.com";
+        User user = new User();
+        user.setEmail(uniqueEmail);
+        user.setPassword(password);
+        user.setRole(Role.DOCTOR);
 
-        jdbcTemplate.update("""
-            INSERT INTO app_users (user_id, email, password, role) 
-            VALUES 
-              (150, 'laura.lopez@example.com', 'password', 'DOCTOR'),
-              (200, 'alvaro.fernandez@example.com', 'password', 'PATIENT'),
-              (201, 'jane.smith@example.com', 'password', 'PATIENT'),
-              (202, 'leonor.diez@example.com', 'password', 'PATIENT')
-        """);
-
-        jdbcTemplate.update("""
-            INSERT INTO doctors (doctor_id, user_id, name, surname, gender)
-            VALUES (5, 150, 'Laura', 'Lopez', 'FEMALE')
-        """);
-
-        jdbcTemplate.update("""
-            INSERT INTO patients (patient_id, user_id, name, surname, gender, birth_date, height, weight,
-                  doctor_id, selected_doctor_id, doctor_approval_status)
-            VALUES (8, 200, 'Alvaro', 'Fernandez', 'MALE', '1990-01-01', 180, 75,
-                  5, 5, 'APPROVED')
-        """);
-
-        jdbcTemplate.update("""
-            INSERT INTO patients (patient_id, user_id, name, surname, gender, birth_date, height, weight,
-                  doctor_id, selected_doctor_id, doctor_approval_status)
-            VALUES (9, 201, 'Jane', 'Smith', 'FEMALE', '1999-06-01', 172, 59, 5, 5, 'PENDING')
-        """);
-
-        jdbcTemplate.update("""
-            INSERT INTO patients (patient_id, user_id, name, surname, gender, birth_date, height, weight,
-                  doctor_id, selected_doctor_id, doctor_approval_status)
-            VALUES (10, 202, 'Leonor', 'Diez', 'FEMALE', '2003-03-08', 168, 59, 5, 5, 'PENDING')
-        """);
-
-        // Insert measurement session for patient 8
-        jdbcTemplate.update("""
-            INSERT INTO measurement_sessions (session_id, patient_id, time_stamp)
-            VALUES (54, 8, NOW())
-        """);
+        authService.register(user);
+        User createdUser = authService.login(uniqueEmail, password);
+        this.doctorId = createdUser.getDoctorId();
 
         Claims claims = Mockito.mock(Claims.class);
-        Mockito.when(claims.get("doctorId", Long.class)).thenReturn(5L);
+        Mockito.when(claims.get("doctorId", Long.class)).thenReturn(doctorId);
+        Mockito.when(claims.get("role", String.class)).thenReturn("DOCTOR");
+        Mockito.when(claims.get("doctorId")).thenReturn(doctorId);
         Mockito.when(claims.get("role")).thenReturn("DOCTOR");
+
         Mockito.when(jwtService.extractClaims(Mockito.anyString())).thenReturn(claims);
+
     }
 
     @Test
     void getAllDoctorsTest() throws Exception {
         mockMvc.perform(get("/api/doctors"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Laura"));
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
-    void findDoctorByIdTest() throws Exception {
+    void getDoctorMeTest() throws Exception {
         mockMvc.perform(get("/api/doctors/me")
-                        .header("Authorization", "Bearer dummy"))
+                        .header("Authorization", "Bearer dummy")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.surname").value("Lopez"));
+                .andExpect(jsonPath("$.doctorId").value(doctorId));
     }
 
     @Test
-    void getPatientsOfDoctorTest() throws Exception {
+    void updateDoctorProfileTest() throws Exception {
+        Doctor updateData = new Doctor();
+        updateData.setName("New Doctor Name");
+
+        mockMvc.perform(post("/api/doctors/me")
+                        .header("Authorization", "Bearer dummy")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateData)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("New Doctor Name"));
+    }
+
+    @Test
+    void getDoctorPatientsTest() throws Exception {
         mockMvc.perform(get("/api/doctors/me/patients")
                         .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[1].name").value("Jane"));
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
-    void getPendingRequestsTest() throws Exception {
+    void getDoctorPendingRequestsTest() throws Exception {
         mockMvc.perform(get("/api/doctors/me/requests")
                         .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Jane"));
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
     void approvePatientRequestTest() throws Exception {
-        mockMvc.perform(post("/api/doctors/me/approve/9")
+        mockMvc.perform(post("/api/doctors/me/approve/1")
                         .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.doctorApprovalStatus").value("APPROVED"))
-                .andExpect(jsonPath("$.doctorId").value(5));
+                .andExpect(jsonPath("$.patientId").isNumber());
     }
 
     @Test
     void rejectPatientRequestTest() throws Exception {
-        mockMvc.perform(post("/api/doctors/me/reject/10")
+        mockMvc.perform(post("/api/doctors/me/reject/1")
                         .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.doctorApprovalStatus").value("REJECTED"))
-                .andExpect(jsonPath("$.doctorId").value(5));
+                .andExpect(jsonPath("$.patientId").isNumber());
     }
 
     @Test
-    void getPatientSessionsTest() throws Exception {
-        mockMvc.perform(get("/api/doctors/sessions/patients/8"))
+    void getSessionsForSpecificPatientTest() throws Exception {
+        mockMvc.perform(get("/api/doctors/sessions/patients/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].sessionId").value(54));
+                .andExpect(jsonPath("$").isArray());
     }
 
-    //** TODO: token report
+    @Test
+    void getDoctorByIdTest() throws Exception {
+        mockMvc.perform(get("/api/doctors/" + doctorId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.doctorId").value(doctorId));
+    }
+
+    @Test
+    void getDoctorPendingRequestsPublicTest() throws Exception {
+        mockMvc.perform(get("/api/doctors/" + doctorId + "/requests"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void approvePatientPublicTest() throws Exception {
+        mockMvc.perform(post("/api/doctors/" + doctorId + "/approve/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.patientId").isNumber());
+    }
+
+    @Test
+    void rejectPatientPublicTest() throws Exception {
+        mockMvc.perform(post("/api/doctors/" + doctorId + "/reject/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.patientId").isNumber());
+    }
+
     @Test
     void generateReportTest() throws Exception {
-        mockMvc.perform(post("/api/doctors/5/report/10/generate"))
+        mockMvc.perform(post("/api/doctors/" + doctorId + "/report/1/generate")
+                        .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.doctorId").value(5))
-                .andExpect(jsonPath("$.sessionId").value(10));
+                .andExpect(jsonPath("$.doctorId").value(doctorId));
     }
 
+    //TODO : fix
     @Test
-    void getReportTest() throws Exception {
-        jdbcTemplate.update("""
-            INSERT INTO report (report_id, patient_id, doctor_id, session_id,
-                file_name, file_type, file_data)
-            VALUES (5, 8, 5, 10, 'session10.pdf', 'application/pdf', 'PDFDATA')
-        """);
-
-        mockMvc.perform(get("/api/doctors/reports/5"))
+    void getReportPdfTest() throws Exception {
+        mockMvc.perform(get("/api/doctors/reports/1")
+                        .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Disposition", "attachment; filename=\"session10.pdf\""))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename")))
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF));
     }
 
- */
+    @Test
+    void getMyReportsTest() throws Exception {
+        mockMvc.perform(get("/api/doctors/me/reports")
+                        .header("Authorization", "Bearer dummy"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void getAllLocalitiesTest() throws Exception {
+        mockMvc.perform(get("/api/doctors/localities"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
 }
