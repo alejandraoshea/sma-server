@@ -324,8 +324,8 @@ public class DoctorRepository {
                 ), id);
     }
 
-    public List<Report> getAllReports() {
-        String sql = "SELECT * FROM report ORDER BY created_at DESC";
+    public List<Report> getAllReports(Long doctorId) {
+        String sql = "SELECT * FROM report WHERE doctor_id = ? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new Report(
                 rs.getLong("report_id"),
                 rs.getLong("patient_id"),
@@ -335,6 +335,6 @@ public class DoctorRepository {
                 rs.getString("file_name"),
                 rs.getString("file_type"),
                 rs.getTimestamp("created_at").toLocalDateTime()
-        ));
+        ), doctorId);
     }
 }

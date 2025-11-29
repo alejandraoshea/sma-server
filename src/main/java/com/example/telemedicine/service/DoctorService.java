@@ -100,6 +100,6 @@ public class DoctorService {
     }
 
     public List<Report> getReportsByDoctor(Long doctorId) {
-        return doctorRepository.getAllReports();
+        return doctorRepository.getAllReports(doctorId);
     }
 }
