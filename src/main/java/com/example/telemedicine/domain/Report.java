@@ -13,6 +13,7 @@ public class Report {
     private Long patientId;
     private Long doctorId;
     private Long sessionId;
+    private String doctorsComment;
     private byte[] fileData;
     private String fileName;
     private String fileType;

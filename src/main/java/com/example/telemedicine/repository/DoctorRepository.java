@@ -324,24 +324,6 @@ public class DoctorRepository {
                 ), id);
     }
 
-    public Locality insertLocality(Locality locality) {
-        String sql = "INSERT INTO localities (name, latitude, longitude) VALUES (?, ?, ?)";
-
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbcTemplate.update(con -> {
-            PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, locality.getName());
-            ps.setDouble(2, locality.getLatitude());
-            ps.setDouble(3, locality.getLongitude());
-            return ps;
-        }, keyHolder);
-        Long id = ((Number) keyHolder.getKeys().get("locality_id")).longValue();
-        locality.setLocalityId(id);
-
-        return locality;
-    }
-
     public List<Report> getAllReports() {
         String sql = "SELECT * FROM report ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new Report(

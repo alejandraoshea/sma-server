@@ -113,11 +113,10 @@ public class PatientController {
 
     //**Session related endpoints
 
+    //!! REMOVE
     @PostMapping("/api/device/mac")
     public ResponseEntity<?> receiveMac(@RequestBody Map<String, String> body) {
-
         String mac = body.get("macAddress");
-
         System.out.println("Received MAC: " + mac);
 
         if (mac == null) {

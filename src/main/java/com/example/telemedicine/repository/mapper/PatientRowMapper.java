@@ -13,7 +13,7 @@ public class PatientRowMapper implements RowMapper<Patient> {
     @Override
     public Patient mapRow(ResultSet rs, int rowNum) throws SQLException {
         String genderStr = rs.getString("gender");
-        Gender gender = (genderStr != null) ? Gender.valueOf(genderStr) : null;
+        Gender gender = (genderStr != null && !genderStr.isBlank()) ? Gender.valueOf(genderStr) : null;
 
         String statusStr = rs.getString("doctor_approval_status");
         DoctorApprovalStatus status = (statusStr != null) ? DoctorApprovalStatus.valueOf(statusStr) : null;
