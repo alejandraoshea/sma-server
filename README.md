@@ -1,11 +1,5 @@
 <a id="readme-top"></a>
 
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![License][license-shield]][license-url]
-
 <br />
 <div align="center">
    <a href="https://github.com/alejandraoshea/sma-server">
@@ -56,9 +50,9 @@ SMA Server is the backend service for a telemedicine platform for SMA (Spinal Mu
 
 ### Built With
 
-* [![Java][Java]][Java-url]
-* [![Spring Boot][SpringBoot]][SpringBoot-url]
-* [![PostgreSQL][PostgreSQL]][PostgreSQL-url]
+* Java
+* Spring Boot
+* PostgreSQL
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -79,16 +73,16 @@ Follow these steps to set up a local development environment.
    git clone https://github.com/alejandraoshea/sma-server.git
    cd sma-server
 
-	2.	Configure your database in application.properties:
+2. Configure your database in application.properties:
+   ```sh
+   spring.datasource.url=jdbc:postgresql://localhost:5432/sma_db
+   spring.datasource.username=your_db_user
+   spring.datasource.password=your_db_password
 
-spring.datasource.url=jdbc:postgresql://localhost:5432/sma_db
-spring.datasource.username=your_db_user
-spring.datasource.password=your_db_password
-
-	3.	Build and run the project:
-
-mvn clean install
-mvn spring-boot:run
+3. Build and run the project:
+   ```sh
+   mvn clean install
+   mvn spring-boot:run
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
