@@ -18,6 +18,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,25 +83,19 @@ public class PatientEndpointsTest {
                         .content(objectMapper.writeValueAsString(s)))
                 .andExpect(status().isOk());
     }
-
     private void uploadSignalJson(long sessionId, SignalType type, String data, int fs) throws Exception {
-        String json = objectMapper.writeValueAsString(new SignalUploadDto(type.name(), data, fs));
+        Map<String, Object> body = new HashMap<>();
+        body.put("signalType", type.name());
+        body.put("patientSignalData", data);
+        body.put("fs", fs);
+
+        String json = objectMapper.writeValueAsString(body);
+
         mockMvc.perform(post("/api/patients/sessions/" + sessionId + "/signals")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.signalType").value(type.name()));
-    }
-
-    static class SignalUploadDto {
-        public String signalType;
-        public String patientSignalData;
-        public Integer fs;
-        public SignalUploadDto(String signalType, String patientSignalData, Integer fs) {
-            this.signalType = signalType;
-            this.patientSignalData = patientSignalData;
-            this.fs = fs;
-        }
     }
 
     @Test

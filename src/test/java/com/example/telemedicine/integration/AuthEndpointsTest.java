@@ -38,13 +38,10 @@ public class AuthEndpointsTest {
             MockitoAnnotations.openMocks(this);
         }
 
-        // --- REGISTER tests ---
 
         @Test
         void register_success() {
             User user = new User();
-            // No exception thrown by authService.register()
-
             ResponseEntity<?> response = authController.register(user);
 
             assertThat(response.getStatusCodeValue()).isEqualTo(200);
@@ -66,8 +63,6 @@ public class AuthEndpointsTest {
             assertThat(body).containsEntry("error", "Registration failed");
             verify(authService).register(user);
         }
-
-        // --- LOGIN tests ---
 
         @Test
         void login_patient_success() {
