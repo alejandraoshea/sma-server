@@ -3,11 +3,34 @@
 
 spring:
   datasource:
-    url: jdbc:postgresql://aws-1-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require
-    username: postgres.dbbipsvrmqzjxztvqitz
-    password: <PASSWORD>
+    url: ${DB_URL} # example: jdbc:postgresql://localhost:5432/telemed_sma
+    username: ${POSTGRESQL_USERNAME}
+    password: ${POSTGRESQL_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
 
 server:
   port: 8443
+  ssl:
+    enabled: true
+    key-store: ${SSL_KEYSTORE_PATH} # Absolute or relative path to the keystore on *this* machine
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: ${SSL_KEY_ALIAS} # Check Certificate Manual to see how to get the certificate and its alias
 
+admin:
+  username: ${ADMIN_USERNAME} # KEEP LIKE THIS, THIS MUST NOT BE EDITED
+  password: ${ADMIN_PASSWORD} # KEEP LIKE THIS, THIS MUST NOT BE EDITED
+
+operator:
+  username: ${OPERATOR_USERNAME}
+  password: ${OPERATOR_PASSWORD}
+
+jwt:
+  secret: vGNgkElgueRp9B9TRslTKVTUHKBMWeYIGW+o3x46xTU=
+  expiration: 3600000
