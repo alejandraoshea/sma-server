@@ -69,7 +69,7 @@ Follow these steps to set up a local development environment.
    git clone https://github.com/alejandraoshea/sma-server.git
    cd sma-server
 
-2. Configure your database in application-local.yml:
+2. Configure your database in application-local.yml (available template in repository at _src/main/resources/application-local.yml.template_):
    ```yaml
    spring:
      config:
